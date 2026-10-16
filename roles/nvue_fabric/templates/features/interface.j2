@@ -1,4 +1,4 @@
-{# 용도: eth0(관리), lo, 업링크(BGP), breakout 부모 포트(실장비), 서버 포트(rail VLAN access) #}
+{# 용도: eth0(관리), lo, 업링크(스파인 있을 때), breakout 부모 포트(실장비), 서버 포트(rail VLAN access) #}
     interface:
       eth0:
         type: eth
@@ -14,9 +14,11 @@
 {% endif %}
       lo:
         type: loopback
+{% if my_up %}
         ipv4:
           address:
-            {{ loopback }}: {}
+            {{ loopback_format.format(id=id) }}: {}
+{% endif %}
 {% for u in my_up %}
       {{ u.port }}:
         type: swp

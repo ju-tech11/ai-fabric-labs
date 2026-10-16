@@ -1,15 +1,7 @@
-# gpu-rail-fabric 링크 표 (자동 생성)
+# compute-rail-nospine 링크 표 (자동 생성)
 
-| 리프 포트 | ↔ | 상대 | 플레인 | rail/VLAN | 서버 IP |
+| 리프 포트 | ↔ | 상대 포트 | 플레인 | rail/VLAN | 서버 IP |
 |---|---|---|---|---|---|
-| leaf-a-01:swp63 | ↔ | spine-a:swp1 | A | BGP | - |
-| leaf-a-01:swp64 | ↔ | spine-a:swp2 | A | BGP | - |
-| leaf-a-02:swp63 | ↔ | spine-a:swp3 | A | BGP | - |
-| leaf-a-02:swp64 | ↔ | spine-a:swp4 | A | BGP | - |
-| leaf-b-01:swp63 | ↔ | spine-b:swp1 | B | BGP | - |
-| leaf-b-01:swp64 | ↔ | spine-b:swp2 | B | BGP | - |
-| leaf-b-02:swp63 | ↔ | spine-b:swp3 | B | BGP | - |
-| leaf-b-02:swp64 | ↔ | spine-b:swp4 | B | BGP | - |
 | leaf-a-01:swp1s0 | ↔ | dgx01:eth1 | A | 0 / 100 | 10.10.0.1/24 |
 | leaf-a-01:swp1s1 | ↔ | dgx02:eth1 | A | 0 / 100 | 10.10.0.2/24 |
 | leaf-a-01:swp2s0 | ↔ | dgx03:eth1 | A | 0 / 100 | 10.10.0.3/24 |

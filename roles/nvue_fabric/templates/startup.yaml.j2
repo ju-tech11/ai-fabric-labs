@@ -1,11 +1,11 @@
-{# 용도: 스위치 1대(리프/스파인 공통)의 NVUE 설정 틀. features/*.j2 조각을 조립 #}
+{# 용도: 스위치 1대(리프/스파인 공통)의 NVUE 설정 틀. features/*.j2 조각을 조립
+   my_links = 서버 포트(리프만), my_up = 리프-스파인 업링크(스파인 있는 토폴로지만) #}
 {% set my_links = fabric_links_all | selectattr('leaf', 'equalto', inventory_hostname) | list %}
 {% set my_up = [] %}
 {% for u in fabric_uplinks_all %}
 {% if u.leaf == inventory_hostname %}{% set _ = my_up.append({'port': u.leaf_port, 'peer': u.spine ~ ':' ~ u.spine_port}) %}{% endif %}
 {% if u.spine == inventory_hostname %}{% set _ = my_up.append({'port': u.spine_port, 'peer': u.leaf ~ ':' ~ u.leaf_port}) %}{% endif %}
 {% endfor %}
-{% set loopback = loopback_format.format(id=id) %}
 - set:
 {% include 'features/system.j2' %}
 {% include 'features/interface.j2' %}
@@ -13,4 +13,7 @@
 {% include 'features/bridge.j2' %}
 {% endif %}
 {% include 'features/qos.j2' %}
-{% include 'features/router.j2' %}
+{% if my_up %}
+{% include 'features/bgp.j2' %}
+{% endif %}
+{% include 'features/vrf.j2' %}

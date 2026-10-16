@@ -1,6 +1,6 @@
 {
   "format": "JSON",
-  "name": "gpu-rail-fabric",
+  "name": "compute-rail-nospine",
   "ztp": null,
   "content": {
     "nodes": {
@@ -23,18 +23,6 @@
         "storage": 20
       },
       "leaf-b-02": {
-        "os": "cumulus-vx-5.16.1",
-        "cpu": 2,
-        "memory": 4096,
-        "storage": 20
-      },
-      "spine-a": {
-        "os": "cumulus-vx-5.16.1",
-        "cpu": 2,
-        "memory": 4096,
-        "storage": 20
-      },
-      "spine-b": {
         "os": "cumulus-vx-5.16.1",
         "cpu": 2,
         "memory": 4096,
@@ -66,86 +54,6 @@
       }
     },
     "links": [
-      [
-        {
-          "node": "leaf-a-01",
-          "interface": "swp63"
-        },
-        {
-          "node": "spine-a",
-          "interface": "swp1"
-        }
-      ],
-      [
-        {
-          "node": "leaf-a-01",
-          "interface": "swp64"
-        },
-        {
-          "node": "spine-a",
-          "interface": "swp2"
-        }
-      ],
-      [
-        {
-          "node": "leaf-a-02",
-          "interface": "swp63"
-        },
-        {
-          "node": "spine-a",
-          "interface": "swp3"
-        }
-      ],
-      [
-        {
-          "node": "leaf-a-02",
-          "interface": "swp64"
-        },
-        {
-          "node": "spine-a",
-          "interface": "swp4"
-        }
-      ],
-      [
-        {
-          "node": "leaf-b-01",
-          "interface": "swp63"
-        },
-        {
-          "node": "spine-b",
-          "interface": "swp1"
-        }
-      ],
-      [
-        {
-          "node": "leaf-b-01",
-          "interface": "swp64"
-        },
-        {
-          "node": "spine-b",
-          "interface": "swp2"
-        }
-      ],
-      [
-        {
-          "node": "leaf-b-02",
-          "interface": "swp63"
-        },
-        {
-          "node": "spine-b",
-          "interface": "swp3"
-        }
-      ],
-      [
-        {
-          "node": "leaf-b-02",
-          "interface": "swp64"
-        },
-        {
-          "node": "spine-b",
-          "interface": "swp4"
-        }
-      ],
       [
         {
           "node": "leaf-a-01",

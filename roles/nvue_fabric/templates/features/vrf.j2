@@ -1,0 +1,16 @@
+{# 용도: 관리망 기본 경로 (실장비 static일 때만. Air는 DHCP가 줌)
+   bgp.j2에서 이미 'vrf:'를 열었으면 그 아래에 이어 붙임 #}
+{% if mgmt_mode == 'static' %}
+{% if not my_up %}
+    vrf:
+{% endif %}
+      {{ mgmt_vrf }}:
+        router:
+          static:
+            0.0.0.0/0:
+              address-family: ipv4-unicast
+              via:
+                {{ mgmt_gateway }}:
+                  type: ipv4-address
+{% endif %}
+

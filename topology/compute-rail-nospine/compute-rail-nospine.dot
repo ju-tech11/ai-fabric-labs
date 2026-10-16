@@ -1,23 +1,13 @@
-/* 용도: gpu-rail-fabric Air 토폴로지 (gen_topology.yml이 인벤토리로 생성). OOB는 Air가 자동 생성 */
-graph "gpu-rail-fabric" {
+/* 용도: compute-rail-nospine Air 토폴로지 (gen_topology.yml이 인벤토리로 생성). OOB는 Air가 자동 생성 */
+graph "compute-rail-nospine" {
   "leaf-a-01" [function="leaf" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
   "leaf-a-02" [function="leaf" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
   "leaf-b-01" [function="leaf" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
   "leaf-b-02" [function="leaf" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
-  "spine-a" [function="spine" os="cumulus-vx-5.16.1" cpu="2" memory="2048" storage="20"]
-  "spine-b" [function="spine" os="cumulus-vx-5.16.1" cpu="2" memory="2048" storage="20"]
   "dgx01" [function="server" os="generic/ubuntu2204" cpu="2" memory="2048" storage="20"]
   "dgx02" [function="server" os="generic/ubuntu2204" cpu="2" memory="2048" storage="20"]
   "dgx03" [function="server" os="generic/ubuntu2204" cpu="2" memory="2048" storage="20"]
   "dgx04" [function="server" os="generic/ubuntu2204" cpu="2" memory="2048" storage="20"]
-  "leaf-a-01":"swp63" -- "spine-a":"swp1"
-  "leaf-a-01":"swp64" -- "spine-a":"swp2"
-  "leaf-a-02":"swp63" -- "spine-a":"swp3"
-  "leaf-a-02":"swp64" -- "spine-a":"swp4"
-  "leaf-b-01":"swp63" -- "spine-b":"swp1"
-  "leaf-b-01":"swp64" -- "spine-b":"swp2"
-  "leaf-b-02":"swp63" -- "spine-b":"swp3"
-  "leaf-b-02":"swp64" -- "spine-b":"swp4"
   "leaf-a-01":"swp1s0" -- "dgx01":"eth1"   /* plane-a rail0 */
   "leaf-a-01":"swp1s1" -- "dgx02":"eth1"   /* plane-a rail0 */
   "leaf-a-01":"swp2s0" -- "dgx03":"eth1"   /* plane-a rail0 */

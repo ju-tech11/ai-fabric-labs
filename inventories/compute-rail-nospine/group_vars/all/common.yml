@@ -1,6 +1,6 @@
-# 용도: 모든 장비 공통 규칙. (원본 저장소의 group_vars/all/common.yml 역할)
+# 용도: 모든 장비 공통 규칙. 스파인 없는 single-tier, 플레인 간 링크·BGP·VXLAN 없음. (원본 저장소의 group_vars/all/common.yml 역할)
 ---
-fabric_name: gpu-rail-fabric
+fabric_name: compute-rail-nospine
 cl_version: "5.16.1"
 
 # 규모·주소 규칙
@@ -18,13 +18,7 @@ subports_per_cage: 2                    # 800G → 2x400G : swpNs0, swpNs1
 switch_cage_count: 64                   # SN5610
 leaf_parent_format: "swp{cage}"
 leaf_port_format: "swp{cage}s{sub}"
-uplink_ports: [swp63, swp64]            # 리프 → 스파인 업링크 (스파인 쪽 포트는 자동 계산)
-
-# 언더레이(리프-스파인)
-bgp_asn_base: 65100                     # ASN = 65100 + id
-loopback_format: "10.255.0.{id}/32"
-graceful_restart_mode: helper-only
-bfd: {profile: bgp-underlay-bfd, detect_multiplier: 3, min_rx_interval: 300, min_tx_interval: 300}
+uplink_ports: []                        # 스파인 없음. 스파인 버전은 README '스파인 있는 버전' 참고
 
 # 환경 (Air ↔ 실장비에서 다른 값)
 breakout_enabled: false                 # 실장비 true
@@ -47,4 +41,4 @@ fabric: "{{ {'rail_count': rail_count, 'planes': planes, 'vlan_base': vlan_base,
 fabric_links_all: "{{ groups['leaf'] | map('extract', hostvars) | list
                       | fabric_links(groups['servers'] | map('extract', hostvars) | list, fabric, server_iface_map) }}"
 fabric_uplinks_all: "{{ groups['leaf'] | map('extract', hostvars) | list
-                        | fabric_uplinks(groups['spine'] | map('extract', hostvars) | list, fabric) }}"
+                        | fabric_uplinks(groups['spine'] | default([]) | map('extract', hostvars) | list, fabric) }}"

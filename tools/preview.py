@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""용도: Ansible 없이(python3 + jinja2 + pyyaml) 생성 결과를 preview/ 에 미리 만든다. 장비 접속 없음.
-실행: python3 tools/preview.py"""
+"""용도: Ansible 없이(python3 + jinja2 + pyyaml) 생성 결과를 preview/<토폴로지>/ 에 미리 만든다. 장비 접속 없음.
+실행: python3 tools/preview.py <토폴로지>      예) python3 tools/preview.py compute-rail-nospine"""
 import glob, json, os, re, sys, types
 import jinja2, yaml
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if len(sys.argv) < 2:
+    sys.exit("사용법: python3 tools/preview.py <토폴로지>\n가능: " + ", ".join(sorted(os.listdir(os.path.join(R, "inventories")))))
+INV = "inventories/" + sys.argv[1]
 m = types.ModuleType("ansible.errors"); m.AnsibleFilterError = type("AnsibleFilterError", (Exception,), {})
 sys.modules.setdefault("ansible", types.ModuleType("ansible")); sys.modules["ansible.errors"] = m
+sys.dont_write_bytecode = True  # __pycache__ 생성 안 함
 sys.path.insert(0, os.path.join(R, "playbooks/filter_plugins"))
 import fabric as fab  # noqa: E402
 
@@ -28,16 +32,16 @@ def walk(g, node):
         hosts += walk(c, sub)
     groups[g] = hosts
     return hosts
-walk("all", load("inventory/hosts.yml")["all"])
+walk("all", load(INV + "/hosts.yml")["all"])
 
-gv = load("inventory/group_vars/all/common.yml")
+gv = load(INV + "/group_vars/all/common.yml")
 for k in ("fabric", "fabric_links_all", "fabric_uplinks_all"):
     gv.pop(k)
 gv["air_switch"]["os"] = gv["air_switch"]["os"].replace("{{ cl_version }}", gv["cl_version"])
-hv = {h: dict(load("inventory/host_vars/%s.yml" % h), inventory_hostname=h) for h in groups["all"]}
+hv = {h: dict(load(INV + "/host_vars/%s.yml" % h), inventory_hostname=h) for h in groups["all"]}
 f = {k: gv[k] for k in ("rail_count", "planes", "vlan_base", "server_ip_format", "prefix_len", "server_iface_format",
                         "subports_per_cage", "switch_cage_count", "leaf_parent_format", "leaf_port_format", "uplink_ports")}
-leaves, spines, servers = ([hv[h] for h in groups[g]] for g in ("leaf", "spine", "servers"))
+leaves, spines, servers = ([hv[h] for h in groups.get(g, [])] for g in ("leaf", "spine", "servers"))
 ctx = dict(gv, groups=groups,
            fabric_links_all=fab.fabric_links(leaves, servers, f, gv["server_iface_map"]),
            fabric_uplinks_all=fab.fabric_uplinks(leaves, spines, f))
@@ -46,7 +50,7 @@ env = jinja2.Environment(loader=jinja2.FileSystemLoader(
     [os.path.join(R, p) for p in ("roles/nvue_fabric/templates", "roles/server_netplan/templates", "playbooks/templates")]),
     trim_blocks=True, undefined=jinja2.StrictUndefined)
 env.filters["to_nice_json"] = lambda o, indent=2: json.dumps(o, indent=indent)
-out = os.path.join(R, "preview"); os.makedirs(out, exist_ok=True)
+out = os.path.join(R, "preview", sys.argv[1]); os.makedirs(out, exist_ok=True)
 
 def render(tpl, name, check=None, **extra):
     text = env.get_template(tpl).render(**dict(ctx, **extra))
@@ -54,8 +58,8 @@ def render(tpl, name, check=None, **extra):
         check(text)
     open(os.path.join(out, name), "w", encoding="utf-8").write(text)
 
-render("topology.dot.j2", "topology.dot")
-render("topology.json.j2", "topology.json", json.loads)
+render("topology.dot.j2", gv["fabric_name"] + ".dot")
+render("topology.json.j2", gv["fabric_name"] + ".json", json.loads)
 render("links.md.j2", "links.md")
 for h in groups["switches"]:
     render("startup.yaml.j2", h + "-startup.yaml", yaml.safe_load, **hv[h])

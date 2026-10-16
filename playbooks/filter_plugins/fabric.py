@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-용도: host_vars(리프의 plane/rails, 서버의 id, 스파인의 plane)와 group_vars/all/common.yml 규칙으로
+용도: host_vars(리프의 plane/rails, 서버·스파인의 id/plane)와 group_vars/all/common.yml 규칙으로
       모든 링크를 계산한다. 스위치·서버 설정, Air 토폴로지, 검증이 전부 이 결과만 쓴다.
 
   서버 링크 : 리프 내 rail 순번 j, 노드 n → idx = j*N + (n-1)
              케이지 = idx // subports + 1, 하위 포트 = idx % subports → swp{케이지}s{하위}
              VLAN = vlan_base + rail, IP = 10.{octet}.{rail}.{node}
              서버 NIC 번호 = rail * 플레인수 + 플레인순번 + 1
-  업링크   : 리프의 uplink_ports[k] ↔ 같은 플레인 스파인의 swp{(리프순번 * 업링크수) + k + 1}
+  업링크   : (스파인이 있을 때만) 리프 uplink_ports[k] ↔ 같은 플레인 스파인의 swp{리프순번*업링크수 + k + 1}
 """
 from ansible.errors import AnsibleFilterError
 
@@ -56,16 +56,17 @@ def fabric_links(leaves, servers, f, iface_map=None):
     return links
 
 
+
 def fabric_uplinks(leaves, spines, f):
-    ups = f["uplink_ports"]
+    """스파인이 없거나 uplink_ports가 비어 있으면 빈 목록"""
+    ups = f.get("uplink_ports") or []
     out = []
     for sp in spines:
         mine = sorted([l for l in leaves if l["plane"] == sp["plane"]], key=lambda l: int(l["id"]))
         for li, leaf in enumerate(mine):
             for k, lp in enumerate(ups):
                 out.append({"plane": sp["plane"], "leaf": leaf["inventory_hostname"], "leaf_port": lp,
-                            "spine": sp["inventory_hostname"],
-                            "spine_port": "swp%d" % (li * len(ups) + k + 1)})
+                            "spine": sp["inventory_hostname"], "spine_port": "swp%d" % (li * len(ups) + k + 1)})
     return out
 
 
