@@ -1,5 +1,9 @@
-# 용도: 서버 1대에 rail 인터페이스(netplan)와 sysctl 배포
+# 용도: 서버 1대에 hostname, rail 인터페이스(netplan), sysctl 배포
 ---
+- name: hostname 설정 (inventory 이름 그대로)
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
 - name: netplan 배포
   ansible.builtin.template:
     src: 60-rail-fabric.yaml.j2

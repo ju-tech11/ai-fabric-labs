@@ -42,7 +42,7 @@ hv = {h: dict(load(INV + "/host_vars/%s.yml" % h), inventory_hostname=h) for h i
 f = {k: gv[k] for k in ("rail_count", "planes", "vlan_base", "server_ip_format", "prefix_len", "server_iface_format",
                         "subports_per_cage", "switch_cage_count", "leaf_parent_format", "leaf_port_format", "uplink_ports")}
 leaves, spines, servers = ([hv[h] for h in groups.get(g, [])] for g in ("leaf", "spine", "servers"))
-ctx = dict(gv, groups=groups,
+ctx = dict(gv, groups=groups, hostvars=hv,
            fabric_links_all=fab.fabric_links(leaves, servers, f, gv["server_iface_map"]),
            fabric_uplinks_all=fab.fabric_uplinks(leaves, spines, f))
 
@@ -50,6 +50,7 @@ env = jinja2.Environment(loader=jinja2.FileSystemLoader(
     [os.path.join(R, p) for p in ("roles/nvue_fabric/templates", "roles/server_netplan/templates", "playbooks/templates")]),
     trim_blocks=True, undefined=jinja2.StrictUndefined)
 env.filters["to_nice_json"] = lambda o, indent=2: json.dumps(o, indent=indent)
+env.filters["combine"] = lambda a, b: dict(a, **b)
 out = os.path.join(R, "preview", sys.argv[1]); os.makedirs(out, exist_ok=True)
 
 def render(tpl, name, check=None, **extra):

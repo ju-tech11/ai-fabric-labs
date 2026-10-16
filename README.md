@@ -22,6 +22,17 @@ air/ztp_cumulus.sh                Air ZTP (스위치 초기 비밀번호)
 tools/preview.py                  Ansible 없이 미리보기
 ```
 
+## 이름·관리 IP (compute-rail-nospine)
+| 장비 | hostname | eth0 (관리, /16) |
+|---|---|---|
+| 리프 | leaf-a-01, leaf-a-02, leaf-b-01, leaf-b-02 | 192.168.0.1 ~ .0.4 |
+| 서버 | dgx-b300-01 ~ dgx-b300-04 | 192.168.10.1 ~ .10.4 |
+
+- 관리 IP: `common.yml`의 `mgmt_ip_format` + host_vars `id`로 계산 → Air JSON의 `management_ip`/`management_mac`, Air OOB DHCP가 MAC 기준으로 고정 할당
+- hostname: Air JSON의 `instructions`(executor: init)로 import 단계에서 지정 + Ansible이 한 번 더 고정
+- Air JSON은 화면 붙여넣기 형식(`title`) 기준. API(`/api/v3/simulations/import/`)로 올릴 땐 `title` → `name`
+- DOT에는 관리 IP·hostname 지정이 없음 → **import는 .json 사용**
+
 ## 실행 (예: compute-rail-nospine)
 ```
 T=compute-rail-nospine

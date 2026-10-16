@@ -6,7 +6,7 @@
         ipv4:
 {% if mgmt_mode == 'static' %}
           address:
-            {{ mgmt_ip }}: {}
+            {{ mgmt_ip_format.switch.format(id=id) }}/{{ mgmt_subnet.split('/')[1] }}: {}
 {% else %}
           dhcp-client:
             state: enabled

@@ -26,12 +26,20 @@ breakout_mode: "2x"
 roce_enabled: true                      # VX에서 apply 실패 시 false
 roce_mode: lossless
 mgmt_vrf: mgmt
-mgmt_mode: dhcp                         # 실장비 static이면 host_vars에 mgmt_ip, 여기에 mgmt_gateway
+mgmt_mode: dhcp                         # Air: OOB DHCP가 아래 IP를 MAC 기준으로 고정 할당 / 실장비: static
+
+# 관리망 (eth0). IP = 형식에 host_vars의 id를 대입 (Air 규칙: 192.168.0.0/16 안, .255 금지)
+mgmt_subnet: 192.168.0.0/16             # 실장비 static 모드의 prefix
+mgmt_gateway: 192.168.255.254           # 실장비 static 모드의 기본 경로 (Air는 서브넷별 기본 게이트웨이 .254 사용)
+mgmt_ip_format:  {switch: "192.168.0.{id}",  server: "192.168.10.{id}"}
+mgmt_mac_format: {switch: "44:38:39:22:01:{id:02x}", server: "44:38:39:11:01:{id:02x}"}   # Air 토폴로지용
 bridge_name: br_default
 
 # Air 노드 사양 (토폴로지 생성용)
-air_switch: {os: "cumulus-vx-{{ cl_version }}", cpu: 2, memory: 4096, storage: 20}
-air_server: {os: "generic/ubuntu2204", cpu: 2, memory: 2048, storage: 20}
+air_switch: {os: "cumulus-vx-{{ cl_version }}", cpu: 2, memory: 4096, storage: 20, nic_model: virtio}
+air_server: {os: "generic/ubuntu2204", cpu: 2, memory: 2048, storage: 20, nic_model: e1000}   # 데모는 1 CPU / 1024
+air_oob: {server: {cpu: 2, memory: 2048, storage: 20}, switch: {cpu: 5, memory: 5120, storage: 20}}
+air_layout: {x0: 825, dx: 550, y_switch: 0, y_server: 550, y_oob: -275}   # 캔버스 배치 좌표
 
 # ★ 계산 결과: 모든 템플릿·playbook이 이것만 참조
 fabric: "{{ {'rail_count': rail_count, 'planes': planes, 'vlan_base': vlan_base, 'server_ip_format': server_ip_format,

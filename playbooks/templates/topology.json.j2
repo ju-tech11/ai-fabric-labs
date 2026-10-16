@@ -1,8 +1,34 @@
-{# 용도: Air import용 JSON (Air export 파일과 같은 format/content.nodes/links 구조) #}
+{# 용도: Air import용 JSON. Air 화면에 붙여넣는 형식(title, management_ip/mac, oob, netq)에 맞춤
+   + instructions(init)으로 import 단계에서 hostname 지정, labels로 role/plane 표시 #}
+{% set L = air_layout %}
+{% set plane_no = {} %}{% for p in planes %}{% set _ = plane_no.update({p.name: loop.index}) %}{% endfor %}
 {% set nodes = {} %}
-{% for h in groups['switches'] %}{% set _ = nodes.update({h: air_switch}) %}{% endfor %}
-{% for h in groups['servers'] %}{% set _ = nodes.update({h: air_server}) %}{% endfor %}
+{% set instr = [] %}
+{% for kind, hosts in [('switch', groups['switches']), ('server', groups['servers'])] %}
+{% for h in hosts %}
+{% set hv = hostvars[h] %}
+{% set spec = air_switch if kind == 'switch' else air_server %}
+{% set lbl = {'role': ('spine' if h in groups.get('spine', []) else 'leaf') if kind == 'switch' else 'server'} %}
+{% if hv.plane is defined %}{% set _ = lbl.update({'plane_id': plane_no[hv.plane]}) %}{% endif %}
+{% set _ = nodes.update({h: {
+     'cpu': spec.cpu, 'memory': spec.memory, 'storage': spec.storage,
+     'positioning': {'x': L.x0 + loop.index0 * L.dx, 'y': L.y_switch if kind == 'switch' else L.y_server},
+     'nic_model': spec.nic_model, 'cpu_mode': 'custom', 'cpu_options': [], 'secureboot': False,
+     'os': spec.os, 'labels': lbl,
+     'management_mac': mgmt_mac_format[kind].format(id=hv.id),
+     'management_ip': mgmt_ip_format[kind].format(id=hv.id),
+     'oob': False, 'storage_pci': {}, 'pxehost': False, 'features': {'uefi': False}}}) %}
+{% set _ = instr.append({'node': h, 'executor': 'init', 'name': 'hostname', 'data': {'hostname': h}}) %}
+{% endfor %}
+{% endfor %}
 {% set links = [] %}
-{% for u in fabric_uplinks_all %}{% set _ = links.append([{'node': u.leaf, 'interface': u.leaf_port}, {'node': u.spine, 'interface': u.spine_port}]) %}{% endfor %}
-{% for l in fabric_links_all %}{% set _ = links.append([{'node': l.leaf, 'interface': l.leaf_port}, {'node': l.server, 'interface': l.server_iface}]) %}{% endfor %}
-{{ {'format': 'JSON', 'name': fabric_name, 'ztp': None, 'content': {'nodes': nodes, 'links': links, 'oob': True}} | to_nice_json(indent=2) }}
+{% for u in fabric_uplinks_all %}{% set _ = links.append([{'interface': u.leaf_port, 'node': u.leaf}, {'interface': u.spine_port, 'node': u.spine}]) %}{% endfor %}
+{% for l in fabric_links_all %}{% set _ = links.append([{'interface': l.leaf_port, 'node': l.leaf}, {'interface': l.server_iface, 'node': l.server}]) %}{% endfor %}
+{% set mid = L.x0 + ((groups['switches'] | length) - 1) * L.dx / 2 %}
+{{ {'format': 'JSON', 'title': fabric_name, 'ztp': '',
+    'content': {'nodes': nodes, 'links': links,
+                'oob': {'nodes': {'oob-mgmt-server': dict(air_oob.server, positioning={'x': (mid - L.dx / 2) | int, 'y': L.y_oob}),
+                                  'oob-mgmt-switch': dict(air_oob.switch, positioning={'x': (mid + L.dx / 2) | int, 'y': L.y_oob})},
+                        'enable_dhcp': True},
+                'instructions': instr,
+                'netq': False}} | to_nice_json(indent=4) }}

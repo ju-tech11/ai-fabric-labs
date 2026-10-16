@@ -1,4 +1,5 @@
-/* 용도: {{ fabric_name }} Air 토폴로지 (gen_topology.yml이 인벤토리로 생성). OOB는 Air가 자동 생성 */
+/* 용도: {{ fabric_name }} Air 토폴로지 (gen_topology.yml이 인벤토리로 생성). OOB는 Air가 자동 생성.
+   ※ 관리 IP(eth0) 지정은 JSON 파일에만 들어 있음 → import는 .json 권장 */
 graph "{{ fabric_name }}" {
 {% for h in groups['switches'] %}
   "{{ h }}" [function="{{ 'spine' if h in groups.get('spine', []) else 'leaf' }}" os="{{ air_switch.os }}" cpu="{{ air_switch.cpu }}" memory="{{ air_switch.memory }}" storage="{{ air_switch.storage }}"]
