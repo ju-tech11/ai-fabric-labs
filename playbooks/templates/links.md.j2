@@ -1,0 +1,10 @@
+# {{ fabric_name }} 링크 표 (자동 생성)
+
+| 리프 포트 | ↔ | 상대 | 플레인 | rail/VLAN | 서버 IP |
+|---|---|---|---|---|---|
+{% for u in fabric_uplinks_all %}
+| {{ u.leaf }}:{{ u.leaf_port }} | ↔ | {{ u.spine }}:{{ u.spine_port }} | {{ u.plane | upper }} | BGP | - |
+{% endfor %}
+{% for l in fabric_links_all %}
+| {{ l.leaf }}:{{ l.leaf_port }} | ↔ | {{ l.server }}:{{ l.server_iface }} | {{ l.plane | upper }} | {{ l.rail }} / {{ l.vlan }} | {{ l.server_ip }}/{{ l.prefix }} |
+{% endfor %}

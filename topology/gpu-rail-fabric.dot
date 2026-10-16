@@ -1,0 +1,85 @@
+/* 용도: gpu-rail-fabric Air 토폴로지 (gen_topology.yml이 인벤토리로 생성). OOB는 Air가 자동 생성 */
+graph "gpu-rail-fabric" {
+  "leaf-a-01" [function="leaf" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
+  "leaf-a-02" [function="leaf" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
+  "leaf-b-01" [function="leaf" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
+  "leaf-b-02" [function="leaf" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
+  "spine-a" [function="spine" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
+  "spine-b" [function="spine" os="cumulus-vx-5.16.1" cpu="2" memory="4096" storage="20"]
+  "dgx01" [function="server" os="generic/ubuntu2204" cpu="2" memory="2048" storage="20"]
+  "dgx02" [function="server" os="generic/ubuntu2204" cpu="2" memory="2048" storage="20"]
+  "dgx03" [function="server" os="generic/ubuntu2204" cpu="2" memory="2048" storage="20"]
+  "dgx04" [function="server" os="generic/ubuntu2204" cpu="2" memory="2048" storage="20"]
+  "leaf-a-01":"swp63" -- "spine-a":"swp1"
+  "leaf-a-01":"swp64" -- "spine-a":"swp2"
+  "leaf-a-02":"swp63" -- "spine-a":"swp3"
+  "leaf-a-02":"swp64" -- "spine-a":"swp4"
+  "leaf-b-01":"swp63" -- "spine-b":"swp1"
+  "leaf-b-01":"swp64" -- "spine-b":"swp2"
+  "leaf-b-02":"swp63" -- "spine-b":"swp3"
+  "leaf-b-02":"swp64" -- "spine-b":"swp4"
+  "leaf-a-01":"swp1s0" -- "dgx01":"eth1"   /* plane-a rail0 */
+  "leaf-a-01":"swp1s1" -- "dgx02":"eth1"   /* plane-a rail0 */
+  "leaf-a-01":"swp2s0" -- "dgx03":"eth1"   /* plane-a rail0 */
+  "leaf-a-01":"swp2s1" -- "dgx04":"eth1"   /* plane-a rail0 */
+  "leaf-a-01":"swp3s0" -- "dgx01":"eth3"   /* plane-a rail1 */
+  "leaf-a-01":"swp3s1" -- "dgx02":"eth3"   /* plane-a rail1 */
+  "leaf-a-01":"swp4s0" -- "dgx03":"eth3"   /* plane-a rail1 */
+  "leaf-a-01":"swp4s1" -- "dgx04":"eth3"   /* plane-a rail1 */
+  "leaf-a-01":"swp5s0" -- "dgx01":"eth5"   /* plane-a rail2 */
+  "leaf-a-01":"swp5s1" -- "dgx02":"eth5"   /* plane-a rail2 */
+  "leaf-a-01":"swp6s0" -- "dgx03":"eth5"   /* plane-a rail2 */
+  "leaf-a-01":"swp6s1" -- "dgx04":"eth5"   /* plane-a rail2 */
+  "leaf-a-01":"swp7s0" -- "dgx01":"eth7"   /* plane-a rail3 */
+  "leaf-a-01":"swp7s1" -- "dgx02":"eth7"   /* plane-a rail3 */
+  "leaf-a-01":"swp8s0" -- "dgx03":"eth7"   /* plane-a rail3 */
+  "leaf-a-01":"swp8s1" -- "dgx04":"eth7"   /* plane-a rail3 */
+  "leaf-a-02":"swp1s0" -- "dgx01":"eth9"   /* plane-a rail4 */
+  "leaf-a-02":"swp1s1" -- "dgx02":"eth9"   /* plane-a rail4 */
+  "leaf-a-02":"swp2s0" -- "dgx03":"eth9"   /* plane-a rail4 */
+  "leaf-a-02":"swp2s1" -- "dgx04":"eth9"   /* plane-a rail4 */
+  "leaf-a-02":"swp3s0" -- "dgx01":"eth11"   /* plane-a rail5 */
+  "leaf-a-02":"swp3s1" -- "dgx02":"eth11"   /* plane-a rail5 */
+  "leaf-a-02":"swp4s0" -- "dgx03":"eth11"   /* plane-a rail5 */
+  "leaf-a-02":"swp4s1" -- "dgx04":"eth11"   /* plane-a rail5 */
+  "leaf-a-02":"swp5s0" -- "dgx01":"eth13"   /* plane-a rail6 */
+  "leaf-a-02":"swp5s1" -- "dgx02":"eth13"   /* plane-a rail6 */
+  "leaf-a-02":"swp6s0" -- "dgx03":"eth13"   /* plane-a rail6 */
+  "leaf-a-02":"swp6s1" -- "dgx04":"eth13"   /* plane-a rail6 */
+  "leaf-a-02":"swp7s0" -- "dgx01":"eth15"   /* plane-a rail7 */
+  "leaf-a-02":"swp7s1" -- "dgx02":"eth15"   /* plane-a rail7 */
+  "leaf-a-02":"swp8s0" -- "dgx03":"eth15"   /* plane-a rail7 */
+  "leaf-a-02":"swp8s1" -- "dgx04":"eth15"   /* plane-a rail7 */
+  "leaf-b-01":"swp1s0" -- "dgx01":"eth2"   /* plane-b rail0 */
+  "leaf-b-01":"swp1s1" -- "dgx02":"eth2"   /* plane-b rail0 */
+  "leaf-b-01":"swp2s0" -- "dgx03":"eth2"   /* plane-b rail0 */
+  "leaf-b-01":"swp2s1" -- "dgx04":"eth2"   /* plane-b rail0 */
+  "leaf-b-01":"swp3s0" -- "dgx01":"eth4"   /* plane-b rail1 */
+  "leaf-b-01":"swp3s1" -- "dgx02":"eth4"   /* plane-b rail1 */
+  "leaf-b-01":"swp4s0" -- "dgx03":"eth4"   /* plane-b rail1 */
+  "leaf-b-01":"swp4s1" -- "dgx04":"eth4"   /* plane-b rail1 */
+  "leaf-b-01":"swp5s0" -- "dgx01":"eth6"   /* plane-b rail2 */
+  "leaf-b-01":"swp5s1" -- "dgx02":"eth6"   /* plane-b rail2 */
+  "leaf-b-01":"swp6s0" -- "dgx03":"eth6"   /* plane-b rail2 */
+  "leaf-b-01":"swp6s1" -- "dgx04":"eth6"   /* plane-b rail2 */
+  "leaf-b-01":"swp7s0" -- "dgx01":"eth8"   /* plane-b rail3 */
+  "leaf-b-01":"swp7s1" -- "dgx02":"eth8"   /* plane-b rail3 */
+  "leaf-b-01":"swp8s0" -- "dgx03":"eth8"   /* plane-b rail3 */
+  "leaf-b-01":"swp8s1" -- "dgx04":"eth8"   /* plane-b rail3 */
+  "leaf-b-02":"swp1s0" -- "dgx01":"eth10"   /* plane-b rail4 */
+  "leaf-b-02":"swp1s1" -- "dgx02":"eth10"   /* plane-b rail4 */
+  "leaf-b-02":"swp2s0" -- "dgx03":"eth10"   /* plane-b rail4 */
+  "leaf-b-02":"swp2s1" -- "dgx04":"eth10"   /* plane-b rail4 */
+  "leaf-b-02":"swp3s0" -- "dgx01":"eth12"   /* plane-b rail5 */
+  "leaf-b-02":"swp3s1" -- "dgx02":"eth12"   /* plane-b rail5 */
+  "leaf-b-02":"swp4s0" -- "dgx03":"eth12"   /* plane-b rail5 */
+  "leaf-b-02":"swp4s1" -- "dgx04":"eth12"   /* plane-b rail5 */
+  "leaf-b-02":"swp5s0" -- "dgx01":"eth14"   /* plane-b rail6 */
+  "leaf-b-02":"swp5s1" -- "dgx02":"eth14"   /* plane-b rail6 */
+  "leaf-b-02":"swp6s0" -- "dgx03":"eth14"   /* plane-b rail6 */
+  "leaf-b-02":"swp6s1" -- "dgx04":"eth14"   /* plane-b rail6 */
+  "leaf-b-02":"swp7s0" -- "dgx01":"eth16"   /* plane-b rail7 */
+  "leaf-b-02":"swp7s1" -- "dgx02":"eth16"   /* plane-b rail7 */
+  "leaf-b-02":"swp8s0" -- "dgx03":"eth16"   /* plane-b rail7 */
+  "leaf-b-02":"swp8s1" -- "dgx04":"eth16"   /* plane-b rail7 */
+}

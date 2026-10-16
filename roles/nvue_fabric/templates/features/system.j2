@@ -1,0 +1,7 @@
+{# 용도: 호스트 이름, 자동 저장 (계정 aaa는 장비의 현재 값을 보존 → tasks/main.yml) #}
+    system:
+      hostname: {{ inventory_hostname }}
+      config:
+        auto-save:
+          state: enabled
+

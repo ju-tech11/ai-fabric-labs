@@ -1,0 +1,54 @@
+# 용도: 스위치 1대 배포. 계정 보존 → 템플릿 렌더링 → replace → diff 출력 → apply
+---
+- name: 현재 설정 읽기 (계정 보존용)
+  ansible.builtin.command: nv config show -o yaml
+  register: cur
+  changed_when: false
+
+- name: 렌더링 + 현재 계정(system.aaa) 합치기
+  ansible.builtin.set_fact:
+    nvue_final: >-
+      {%- set sets = (cur.stdout | from_yaml or []) | selectattr('set', 'defined') | map(attribute='set') | list -%}
+      {%- set sysblk = (sets[0].system | default({})) if sets else {} -%}
+      {%- set keep = {} -%}
+      {%- for k in nvue_preserve_system_keys if k in sysblk -%}{%- set _ = keep.update({k: sysblk[k]}) -%}{%- endfor -%}
+      {{ [{'set': ({'system': keep} if keep else {}) | combine(
+            (lookup('ansible.builtin.template', 'startup.yaml.j2') | from_yaml)[0]['set'], recursive=True)}] }}
+
+- name: build 폴더 준비
+  ansible.builtin.file:
+    path: "{{ nvue_build_dir }}/{{ inventory_hostname }}"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+
+- name: 생성본을 build/<장비>/startup.yaml 에 저장
+  ansible.builtin.copy:
+    content: "{{ nvue_final | to_nice_yaml(indent=2) }}"
+    dest: "{{ nvue_build_dir }}/{{ inventory_hostname }}/startup.yaml"
+    mode: "0644"
+  delegate_to: localhost
+
+- name: 장비로 전송
+  ansible.builtin.copy:
+    content: "{{ nvue_final | to_nice_yaml(indent=2) }}"
+    dest: "{{ nvue_remote_file }}"
+    mode: "0644"
+
+- name: nv config replace → diff
+  ansible.builtin.shell: "nv config replace {{ nvue_remote_file }} && nv config diff"
+  register: diff
+  changed_when: false
+
+- name: diff 출력
+  ansible.builtin.debug:
+    msg: "{{ diff.stdout_lines if diff.stdout | trim not in ['', '{}'] else '(변경 없음)' }}"
+
+- name: dry-run이면 pending 폐기
+  ansible.builtin.command: nv config detach
+  when: nvue_dry_run | bool
+  changed_when: false
+
+- name: nv config apply -y
+  ansible.builtin.command: nv config apply -y
+  when: not (nvue_dry_run | bool) and diff.stdout | trim not in ['', '{}']

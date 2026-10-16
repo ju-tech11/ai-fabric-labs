@@ -1,0 +1,11 @@
+# 용도: 인벤토리(host_vars) 기준으로 Air 토폴로지 파일 생성. 장비 접속 없음 (노트북/WSL 가능)
+#   결과: topology/gpu-rail-fabric.dot, .json, links.md
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    out: "{{ playbook_dir }}/../topology"
+  tasks:
+    - ansible.builtin.template: {src: "{{ item }}.j2", dest: "{{ out }}/{{ item | replace('topology', fabric_name) }}", mode: "0644"}
+      loop: [topology.dot, topology.json, links.md]

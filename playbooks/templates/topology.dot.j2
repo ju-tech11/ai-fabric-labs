@@ -1,0 +1,15 @@
+/* 용도: {{ fabric_name }} Air 토폴로지 (gen_topology.yml이 인벤토리로 생성). OOB는 Air가 자동 생성 */
+graph "{{ fabric_name }}" {
+{% for h in groups['switches'] %}
+  "{{ h }}" [function="{{ 'spine' if h in groups['spine'] else 'leaf' }}" os="{{ air_switch.os }}" cpu="{{ air_switch.cpu }}" memory="{{ air_switch.memory }}" storage="{{ air_switch.storage }}"]
+{% endfor %}
+{% for h in groups['servers'] %}
+  "{{ h }}" [function="server" os="{{ air_server.os }}" cpu="{{ air_server.cpu }}" memory="{{ air_server.memory }}" storage="{{ air_server.storage }}"]
+{% endfor %}
+{% for u in fabric_uplinks_all %}
+  "{{ u.leaf }}":"{{ u.leaf_port }}" -- "{{ u.spine }}":"{{ u.spine_port }}"
+{% endfor %}
+{% for l in fabric_links_all %}
+  "{{ l.leaf }}":"{{ l.leaf_port }}" -- "{{ l.server }}":"{{ l.server_iface }}"   /* plane-{{ l.plane }} rail{{ l.rail }} */
+{% endfor %}
+}

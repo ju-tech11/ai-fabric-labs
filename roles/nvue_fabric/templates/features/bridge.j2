@@ -1,0 +1,10 @@
+{# 용도: rail마다 L2 VLAN 1개 (SVI 없음) #}
+    bridge:
+      domain:
+        {{ bridge_name }}:
+          type: vlan-aware
+          vlan:
+{% for vid in my_links | map(attribute='vlan') | unique | sort %}
+            '{{ vid }}': {}
+{% endfor %}
+

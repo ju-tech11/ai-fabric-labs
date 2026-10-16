@@ -1,0 +1,50 @@
+# 용도: 모든 장비 공통 규칙. (원본 저장소의 group_vars/all/common.yml 역할)
+---
+fabric_name: gpu-rail-fabric
+cl_version: "5.16.1"
+
+# 규모·주소 규칙
+rail_count: 8
+planes: [{name: a, octet: 10}, {name: b, octet: 20}]   # 순서 = 서버 NIC 순서(A, B)
+vlan_base: 100                          # rail r → VLAN 100+r
+server_ip_format: "10.{octet}.{rail}.{node}"
+prefix_len: 24
+server_mtu: 9000
+server_iface_format: "eth{index}"       # Air 기준. 실장비는 server_iface_map으로 덮어씀
+server_iface_map: {}                    # 예) {a-0: enp27s0f0np0, b-0: enp27s0f1np1, ...}
+
+# 스위치 포트 규칙
+subports_per_cage: 2                    # 800G → 2x400G : swpNs0, swpNs1
+switch_cage_count: 64                   # SN5610
+leaf_parent_format: "swp{cage}"
+leaf_port_format: "swp{cage}s{sub}"
+uplink_ports: [swp63, swp64]            # 리프 → 스파인 업링크 (스파인 쪽 포트는 자동 계산)
+
+# 언더레이(리프-스파인)
+bgp_asn_base: 65100                     # ASN = 65100 + id
+loopback_format: "10.255.0.{id}/32"
+graceful_restart_mode: helper-only
+bfd: {profile: bgp-underlay-bfd, detect_multiplier: 3, min_rx_interval: 300, min_tx_interval: 300}
+
+# 환경 (Air ↔ 실장비에서 다른 값)
+breakout_enabled: false                 # 실장비 true
+breakout_mode: "2x"
+roce_enabled: true                      # VX에서 apply 실패 시 false
+roce_mode: lossless
+mgmt_vrf: mgmt
+mgmt_mode: dhcp                         # 실장비 static이면 host_vars에 mgmt_ip, 여기에 mgmt_gateway
+bridge_name: br_default
+
+# Air 노드 사양 (토폴로지 생성용)
+air_switch: {os: "cumulus-vx-{{ cl_version }}", cpu: 2, memory: 4096, storage: 20}
+air_server: {os: "generic/ubuntu2204", cpu: 2, memory: 2048, storage: 20}
+
+# ★ 계산 결과: 모든 템플릿·playbook이 이것만 참조
+fabric: "{{ {'rail_count': rail_count, 'planes': planes, 'vlan_base': vlan_base, 'server_ip_format': server_ip_format,
+             'prefix_len': prefix_len, 'server_iface_format': server_iface_format, 'subports_per_cage': subports_per_cage,
+             'switch_cage_count': switch_cage_count, 'leaf_parent_format': leaf_parent_format,
+             'leaf_port_format': leaf_port_format, 'uplink_ports': uplink_ports} }}"
+fabric_links_all: "{{ groups['leaf'] | map('extract', hostvars) | list
+                      | fabric_links(groups['servers'] | map('extract', hostvars) | list, fabric, server_iface_map) }}"
+fabric_uplinks_all: "{{ groups['leaf'] | map('extract', hostvars) | list
+                        | fabric_uplinks(groups['spine'] | map('extract', hostvars) | list, fabric) }}"

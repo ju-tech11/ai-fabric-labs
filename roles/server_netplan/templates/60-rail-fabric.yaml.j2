@@ -1,0 +1,10 @@
+# 용도: {{ inventory_hostname }} rail 인터페이스 (Ansible 생성, 직접 수정 금지). eth0(관리)는 건드리지 않음
+network:
+  version: 2
+  ethernets:
+{% for l in fabric_links_all | selectattr('server', 'equalto', inventory_hostname) | sort(attribute='server_iface_index') %}
+    {{ l.server_iface }}:            # plane-{{ l.plane }} rail{{ l.rail }} → {{ l.leaf }}:{{ l.leaf_port }}
+      dhcp4: false
+      mtu: {{ server_mtu }}
+      addresses: [{{ l.server_ip }}/{{ l.prefix }}]
+{% endfor %}

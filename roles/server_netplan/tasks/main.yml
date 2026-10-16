@@ -1,0 +1,15 @@
+# 용도: 서버 1대에 rail 인터페이스(netplan)와 sysctl 배포
+---
+- name: netplan 배포
+  ansible.builtin.template:
+    src: 60-rail-fabric.yaml.j2
+    dest: /etc/netplan/60-rail-fabric.yaml
+    mode: "0600"
+  notify: netplan apply
+
+- name: sysctl 배포
+  ansible.builtin.template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.d/60-rail-fabric.conf
+    mode: "0644"
+  notify: sysctl reload

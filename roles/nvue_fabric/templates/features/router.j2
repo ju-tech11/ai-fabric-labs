@@ -1,0 +1,48 @@
+{# 용도: 리프-스파인 eBGP unnumbered + BFD (원본 데모 bgp.j2와 같은 구조), 관리망 기본 경로 #}
+    router:
+      bfd:
+        state: enabled
+        profile:
+          {{ bfd.profile }}:
+            detect-multiplier: {{ bfd.detect_multiplier }}
+            min-rx-interval: {{ bfd.min_rx_interval }}
+            min-tx-interval: {{ bfd.min_tx_interval }}
+      bgp:
+        state: enabled
+        graceful-restart:
+          mode: {{ graceful_restart_mode }}
+    vrf:
+      default:
+        router:
+          bgp:
+            state: enabled
+            autonomous-system: {{ bgp_asn_base + id }}
+            router-id: {{ loopback.split('/')[0] }}
+            peer-group:
+              underlay:
+                remote-as: external
+                bfd:
+                  profile: {{ bfd.profile }}
+            neighbor:
+{% for u in my_up %}
+              {{ u.port }}:
+                peer-group: underlay
+                type: unnumbered
+{% endfor %}
+            address-family:
+              ipv4-unicast:
+                state: enabled
+                redistribute:
+                  connected:
+                    state: enabled
+{% if mgmt_mode == 'static' %}
+      {{ mgmt_vrf }}:
+        router:
+          static:
+            0.0.0.0/0:
+              address-family: ipv4-unicast
+              via:
+                {{ mgmt_gateway }}:
+                  type: ipv4-address
+{% endif %}
+

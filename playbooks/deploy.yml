@@ -1,0 +1,13 @@
+# 용도: 스위치(NVUE) → 서버(netplan) 배포
+#   ansible-playbook playbooks/deploy.yml                          실제 적용
+#   ansible-playbook playbooks/deploy.yml -e nvue_dry_run=true     스위치 diff만 보기
+#   ansible-playbook playbooks/deploy.yml --limit leaf-a-01        한 대만
+---
+- hosts: switches
+  gather_facts: false
+  roles: [nvue_fabric]
+
+- hosts: servers
+  gather_facts: false
+  become: true
+  roles: [server_netplan]

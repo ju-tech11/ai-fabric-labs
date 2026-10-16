@@ -1,0 +1,76 @@
+# gpu-rail-fabric 링크 표 (자동 생성)
+
+| 리프 포트 | ↔ | 상대 | 플레인 | rail/VLAN | 서버 IP |
+|---|---|---|---|---|---|
+| leaf-a-01:swp63 | ↔ | spine-a:swp1 | A | BGP | - |
+| leaf-a-01:swp64 | ↔ | spine-a:swp2 | A | BGP | - |
+| leaf-a-02:swp63 | ↔ | spine-a:swp3 | A | BGP | - |
+| leaf-a-02:swp64 | ↔ | spine-a:swp4 | A | BGP | - |
+| leaf-b-01:swp63 | ↔ | spine-b:swp1 | B | BGP | - |
+| leaf-b-01:swp64 | ↔ | spine-b:swp2 | B | BGP | - |
+| leaf-b-02:swp63 | ↔ | spine-b:swp3 | B | BGP | - |
+| leaf-b-02:swp64 | ↔ | spine-b:swp4 | B | BGP | - |
+| leaf-a-01:swp1s0 | ↔ | dgx01:eth1 | A | 0 / 100 | 10.10.0.1/24 |
+| leaf-a-01:swp1s1 | ↔ | dgx02:eth1 | A | 0 / 100 | 10.10.0.2/24 |
+| leaf-a-01:swp2s0 | ↔ | dgx03:eth1 | A | 0 / 100 | 10.10.0.3/24 |
+| leaf-a-01:swp2s1 | ↔ | dgx04:eth1 | A | 0 / 100 | 10.10.0.4/24 |
+| leaf-a-01:swp3s0 | ↔ | dgx01:eth3 | A | 1 / 101 | 10.10.1.1/24 |
+| leaf-a-01:swp3s1 | ↔ | dgx02:eth3 | A | 1 / 101 | 10.10.1.2/24 |
+| leaf-a-01:swp4s0 | ↔ | dgx03:eth3 | A | 1 / 101 | 10.10.1.3/24 |
+| leaf-a-01:swp4s1 | ↔ | dgx04:eth3 | A | 1 / 101 | 10.10.1.4/24 |
+| leaf-a-01:swp5s0 | ↔ | dgx01:eth5 | A | 2 / 102 | 10.10.2.1/24 |
+| leaf-a-01:swp5s1 | ↔ | dgx02:eth5 | A | 2 / 102 | 10.10.2.2/24 |
+| leaf-a-01:swp6s0 | ↔ | dgx03:eth5 | A | 2 / 102 | 10.10.2.3/24 |
+| leaf-a-01:swp6s1 | ↔ | dgx04:eth5 | A | 2 / 102 | 10.10.2.4/24 |
+| leaf-a-01:swp7s0 | ↔ | dgx01:eth7 | A | 3 / 103 | 10.10.3.1/24 |
+| leaf-a-01:swp7s1 | ↔ | dgx02:eth7 | A | 3 / 103 | 10.10.3.2/24 |
+| leaf-a-01:swp8s0 | ↔ | dgx03:eth7 | A | 3 / 103 | 10.10.3.3/24 |
+| leaf-a-01:swp8s1 | ↔ | dgx04:eth7 | A | 3 / 103 | 10.10.3.4/24 |
+| leaf-a-02:swp1s0 | ↔ | dgx01:eth9 | A | 4 / 104 | 10.10.4.1/24 |
+| leaf-a-02:swp1s1 | ↔ | dgx02:eth9 | A | 4 / 104 | 10.10.4.2/24 |
+| leaf-a-02:swp2s0 | ↔ | dgx03:eth9 | A | 4 / 104 | 10.10.4.3/24 |
+| leaf-a-02:swp2s1 | ↔ | dgx04:eth9 | A | 4 / 104 | 10.10.4.4/24 |
+| leaf-a-02:swp3s0 | ↔ | dgx01:eth11 | A | 5 / 105 | 10.10.5.1/24 |
+| leaf-a-02:swp3s1 | ↔ | dgx02:eth11 | A | 5 / 105 | 10.10.5.2/24 |
+| leaf-a-02:swp4s0 | ↔ | dgx03:eth11 | A | 5 / 105 | 10.10.5.3/24 |
+| leaf-a-02:swp4s1 | ↔ | dgx04:eth11 | A | 5 / 105 | 10.10.5.4/24 |
+| leaf-a-02:swp5s0 | ↔ | dgx01:eth13 | A | 6 / 106 | 10.10.6.1/24 |
+| leaf-a-02:swp5s1 | ↔ | dgx02:eth13 | A | 6 / 106 | 10.10.6.2/24 |
+| leaf-a-02:swp6s0 | ↔ | dgx03:eth13 | A | 6 / 106 | 10.10.6.3/24 |
+| leaf-a-02:swp6s1 | ↔ | dgx04:eth13 | A | 6 / 106 | 10.10.6.4/24 |
+| leaf-a-02:swp7s0 | ↔ | dgx01:eth15 | A | 7 / 107 | 10.10.7.1/24 |
+| leaf-a-02:swp7s1 | ↔ | dgx02:eth15 | A | 7 / 107 | 10.10.7.2/24 |
+| leaf-a-02:swp8s0 | ↔ | dgx03:eth15 | A | 7 / 107 | 10.10.7.3/24 |
+| leaf-a-02:swp8s1 | ↔ | dgx04:eth15 | A | 7 / 107 | 10.10.7.4/24 |
+| leaf-b-01:swp1s0 | ↔ | dgx01:eth2 | B | 0 / 100 | 10.20.0.1/24 |
+| leaf-b-01:swp1s1 | ↔ | dgx02:eth2 | B | 0 / 100 | 10.20.0.2/24 |
+| leaf-b-01:swp2s0 | ↔ | dgx03:eth2 | B | 0 / 100 | 10.20.0.3/24 |
+| leaf-b-01:swp2s1 | ↔ | dgx04:eth2 | B | 0 / 100 | 10.20.0.4/24 |
+| leaf-b-01:swp3s0 | ↔ | dgx01:eth4 | B | 1 / 101 | 10.20.1.1/24 |
+| leaf-b-01:swp3s1 | ↔ | dgx02:eth4 | B | 1 / 101 | 10.20.1.2/24 |
+| leaf-b-01:swp4s0 | ↔ | dgx03:eth4 | B | 1 / 101 | 10.20.1.3/24 |
+| leaf-b-01:swp4s1 | ↔ | dgx04:eth4 | B | 1 / 101 | 10.20.1.4/24 |
+| leaf-b-01:swp5s0 | ↔ | dgx01:eth6 | B | 2 / 102 | 10.20.2.1/24 |
+| leaf-b-01:swp5s1 | ↔ | dgx02:eth6 | B | 2 / 102 | 10.20.2.2/24 |
+| leaf-b-01:swp6s0 | ↔ | dgx03:eth6 | B | 2 / 102 | 10.20.2.3/24 |
+| leaf-b-01:swp6s1 | ↔ | dgx04:eth6 | B | 2 / 102 | 10.20.2.4/24 |
+| leaf-b-01:swp7s0 | ↔ | dgx01:eth8 | B | 3 / 103 | 10.20.3.1/24 |
+| leaf-b-01:swp7s1 | ↔ | dgx02:eth8 | B | 3 / 103 | 10.20.3.2/24 |
+| leaf-b-01:swp8s0 | ↔ | dgx03:eth8 | B | 3 / 103 | 10.20.3.3/24 |
+| leaf-b-01:swp8s1 | ↔ | dgx04:eth8 | B | 3 / 103 | 10.20.3.4/24 |
+| leaf-b-02:swp1s0 | ↔ | dgx01:eth10 | B | 4 / 104 | 10.20.4.1/24 |
+| leaf-b-02:swp1s1 | ↔ | dgx02:eth10 | B | 4 / 104 | 10.20.4.2/24 |
+| leaf-b-02:swp2s0 | ↔ | dgx03:eth10 | B | 4 / 104 | 10.20.4.3/24 |
+| leaf-b-02:swp2s1 | ↔ | dgx04:eth10 | B | 4 / 104 | 10.20.4.4/24 |
+| leaf-b-02:swp3s0 | ↔ | dgx01:eth12 | B | 5 / 105 | 10.20.5.1/24 |
+| leaf-b-02:swp3s1 | ↔ | dgx02:eth12 | B | 5 / 105 | 10.20.5.2/24 |
+| leaf-b-02:swp4s0 | ↔ | dgx03:eth12 | B | 5 / 105 | 10.20.5.3/24 |
+| leaf-b-02:swp4s1 | ↔ | dgx04:eth12 | B | 5 / 105 | 10.20.5.4/24 |
+| leaf-b-02:swp5s0 | ↔ | dgx01:eth14 | B | 6 / 106 | 10.20.6.1/24 |
+| leaf-b-02:swp5s1 | ↔ | dgx02:eth14 | B | 6 / 106 | 10.20.6.2/24 |
+| leaf-b-02:swp6s0 | ↔ | dgx03:eth14 | B | 6 / 106 | 10.20.6.3/24 |
+| leaf-b-02:swp6s1 | ↔ | dgx04:eth14 | B | 6 / 106 | 10.20.6.4/24 |
+| leaf-b-02:swp7s0 | ↔ | dgx01:eth16 | B | 7 / 107 | 10.20.7.1/24 |
+| leaf-b-02:swp7s1 | ↔ | dgx02:eth16 | B | 7 / 107 | 10.20.7.2/24 |
+| leaf-b-02:swp8s0 | ↔ | dgx03:eth16 | B | 7 / 107 | 10.20.7.3/24 |
+| leaf-b-02:swp8s1 | ↔ | dgx04:eth16 | B | 7 / 107 | 10.20.7.4/24 |

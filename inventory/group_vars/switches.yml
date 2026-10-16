@@ -1,0 +1,4 @@
+---
+ansible_user: "{{ switch_user }}"
+ansible_password: "{{ switch_password }}"
+ansible_become_password: "{{ switch_password }}"

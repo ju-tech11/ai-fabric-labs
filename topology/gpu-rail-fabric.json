@@ -1,0 +1,792 @@
+{
+  "format": "JSON",
+  "name": "gpu-rail-fabric",
+  "ztp": null,
+  "content": {
+    "nodes": {
+      "leaf-a-01": {
+        "os": "cumulus-vx-5.16.1",
+        "cpu": 2,
+        "memory": 4096,
+        "storage": 20
+      },
+      "leaf-a-02": {
+        "os": "cumulus-vx-5.16.1",
+        "cpu": 2,
+        "memory": 4096,
+        "storage": 20
+      },
+      "leaf-b-01": {
+        "os": "cumulus-vx-5.16.1",
+        "cpu": 2,
+        "memory": 4096,
+        "storage": 20
+      },
+      "leaf-b-02": {
+        "os": "cumulus-vx-5.16.1",
+        "cpu": 2,
+        "memory": 4096,
+        "storage": 20
+      },
+      "spine-a": {
+        "os": "cumulus-vx-5.16.1",
+        "cpu": 2,
+        "memory": 4096,
+        "storage": 20
+      },
+      "spine-b": {
+        "os": "cumulus-vx-5.16.1",
+        "cpu": 2,
+        "memory": 4096,
+        "storage": 20
+      },
+      "dgx01": {
+        "os": "generic/ubuntu2204",
+        "cpu": 2,
+        "memory": 2048,
+        "storage": 20
+      },
+      "dgx02": {
+        "os": "generic/ubuntu2204",
+        "cpu": 2,
+        "memory": 2048,
+        "storage": 20
+      },
+      "dgx03": {
+        "os": "generic/ubuntu2204",
+        "cpu": 2,
+        "memory": 2048,
+        "storage": 20
+      },
+      "dgx04": {
+        "os": "generic/ubuntu2204",
+        "cpu": 2,
+        "memory": 2048,
+        "storage": 20
+      }
+    },
+    "links": [
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp63"
+        },
+        {
+          "node": "spine-a",
+          "interface": "swp1"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp64"
+        },
+        {
+          "node": "spine-a",
+          "interface": "swp2"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp63"
+        },
+        {
+          "node": "spine-a",
+          "interface": "swp3"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp64"
+        },
+        {
+          "node": "spine-a",
+          "interface": "swp4"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp63"
+        },
+        {
+          "node": "spine-b",
+          "interface": "swp1"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp64"
+        },
+        {
+          "node": "spine-b",
+          "interface": "swp2"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp63"
+        },
+        {
+          "node": "spine-b",
+          "interface": "swp3"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp64"
+        },
+        {
+          "node": "spine-b",
+          "interface": "swp4"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp1s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth1"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp1s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth1"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp2s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth1"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp2s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth1"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp3s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth3"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp3s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth3"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp4s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth3"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp4s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth3"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp5s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth5"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp5s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth5"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp6s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth5"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp6s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth5"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp7s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth7"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp7s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth7"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp8s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth7"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-01",
+          "interface": "swp8s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth7"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp1s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth9"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp1s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth9"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp2s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth9"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp2s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth9"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp3s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth11"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp3s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth11"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp4s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth11"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp4s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth11"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp5s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth13"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp5s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth13"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp6s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth13"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp6s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth13"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp7s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth15"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp7s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth15"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp8s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth15"
+        }
+      ],
+      [
+        {
+          "node": "leaf-a-02",
+          "interface": "swp8s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth15"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp1s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth2"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp1s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth2"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp2s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth2"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp2s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth2"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp3s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth4"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp3s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth4"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp4s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth4"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp4s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth4"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp5s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth6"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp5s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth6"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp6s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth6"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp6s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth6"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp7s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth8"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp7s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth8"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp8s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth8"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-01",
+          "interface": "swp8s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth8"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp1s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth10"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp1s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth10"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp2s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth10"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp2s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth10"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp3s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth12"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp3s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth12"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp4s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth12"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp4s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth12"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp5s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth14"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp5s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth14"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp6s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth14"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp6s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth14"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp7s0"
+        },
+        {
+          "node": "dgx01",
+          "interface": "eth16"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp7s1"
+        },
+        {
+          "node": "dgx02",
+          "interface": "eth16"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp8s0"
+        },
+        {
+          "node": "dgx03",
+          "interface": "eth16"
+        }
+      ],
+      [
+        {
+          "node": "leaf-b-02",
+          "interface": "swp8s1"
+        },
+        {
+          "node": "dgx04",
+          "interface": "eth16"
+        }
+      ]
+    ],
+    "oob": true
+  }
+}

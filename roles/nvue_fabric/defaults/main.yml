@@ -1,0 +1,5 @@
+---
+nvue_dry_run: false                  # true: replace → diff까지만, pending 폐기
+nvue_remote_file: /tmp/fabric-startup.yaml
+nvue_build_dir: "{{ playbook_dir }}/../build"
+nvue_preserve_system_keys: [aaa]     # 장비 현재 설정에서 유지할 항목(계정)

@@ -1,0 +1,7 @@
+{# 용도: RoCE QoS (nv set qos roce mode lossless) #}
+{% if roce_enabled %}
+    qos:
+      roce:
+        mode: {{ roce_mode }}
+{% endif %}
+

@@ -1,0 +1,51 @@
+{# 용도: eth0(관리), lo, 업링크(BGP), breakout 부모 포트(실장비), 서버 포트(rail VLAN access) #}
+    interface:
+      eth0:
+        type: eth
+        vrf: {{ mgmt_vrf }}
+        ipv4:
+{% if mgmt_mode == 'static' %}
+          address:
+            {{ mgmt_ip }}: {}
+{% else %}
+          dhcp-client:
+            state: enabled
+            set-hostname: disabled
+{% endif %}
+      lo:
+        type: loopback
+        ipv4:
+          address:
+            {{ loopback }}: {}
+{% for u in my_up %}
+      {{ u.port }}:
+        type: swp
+        description: "uplink to {{ u.peer }}"
+        link:
+          state:
+            up: {}
+{% endfor %}
+{% if breakout_enabled %}
+{% for parent in my_links | map(attribute='leaf_parent_port') | unique | list %}
+      {{ parent }}:
+        link:
+          breakout:
+            {{ breakout_mode }}: {}
+{% endfor %}
+{% endif %}
+{% for l in my_links | sort(attribute='leaf_cage') %}
+      {{ l.leaf_port }}:
+        type: swp
+        description: "{{ l.server }}-{{ l.server_iface }} plane-{{ l.plane }} rail{{ l.rail }}"
+        link:
+          state:
+            up: {}
+        bridge:
+          domain:
+            {{ bridge_name }}:
+              access: {{ l.vlan }}
+              stp:
+                admin-edge: enabled
+                bpdu-guard: enabled
+{% endfor %}
+

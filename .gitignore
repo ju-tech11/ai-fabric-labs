@@ -1,0 +1,6 @@
+build/*
+results/*
+!*/.gitkeep
+preview/
+inventory/group_vars/all/credentials.yml
+__pycache__/

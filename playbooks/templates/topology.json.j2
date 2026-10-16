@@ -1,0 +1,8 @@
+{# 용도: Air import용 JSON (Air export 파일과 같은 format/content.nodes/links 구조) #}
+{% set nodes = {} %}
+{% for h in groups['switches'] %}{% set _ = nodes.update({h: air_switch}) %}{% endfor %}
+{% for h in groups['servers'] %}{% set _ = nodes.update({h: air_server}) %}{% endfor %}
+{% set links = [] %}
+{% for u in fabric_uplinks_all %}{% set _ = links.append([{'node': u.leaf, 'interface': u.leaf_port}, {'node': u.spine, 'interface': u.spine_port}]) %}{% endfor %}
+{% for l in fabric_links_all %}{% set _ = links.append([{'node': l.leaf, 'interface': l.leaf_port}, {'node': l.server, 'interface': l.server_iface}]) %}{% endfor %}
+{{ {'format': 'JSON', 'name': fabric_name, 'ztp': None, 'content': {'nodes': nodes, 'links': links, 'oob': True}} | to_nice_json(indent=2) }}

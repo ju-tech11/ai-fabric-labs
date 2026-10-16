@@ -1,0 +1,5 @@
+---
+- name: netplan apply
+  ansible.builtin.command: netplan apply
+- name: sysctl reload
+  ansible.builtin.command: sysctl --system
