@@ -1,7 +1,15 @@
-{# 용도: 호스트 이름, 자동 저장 (계정 aaa는 장비의 현재 값을 보존 → tasks/main.yml) #}
+{# 용도: 호스트 이름, 자동 저장, cumulus 계정
+   - 계정 비밀번호는 credentials.yml의 switch_password로 해시를 만들어 넣는다 (장비에서 읽어오지 않음)
+   - ssh/api/ntp 등 나머지 system 기본값은 장비 값을 유지 → defaults/main.yml 의 nvue_preserve_system_keys #}
     system:
       hostname: {{ inventory_hostname }}
       config:
         auto-save:
           state: enabled
+      aaa:
+        user:
+          {{ switch_user }}:
+            full-name: cumulus,,,
+            hashed-password: '{{ switch_password | password_hash('sha512', nvue_password_salt) }}'
+            role: system-admin
 

@@ -35,6 +35,9 @@ def walk(g, node):
 walk("all", load(INV + "/hosts.yml")["all"])
 
 gv = load(INV + "/group_vars/all/common.yml")
+gv.setdefault("switch_user", "cumulus")          # credentials.yml 없이 미리보기
+gv.setdefault("switch_password", "x")
+gv.setdefault("nvue_password_salt", "fabriclab")
 for k in ("fabric", "fabric_links_all", "fabric_uplinks_all"):
     gv.pop(k)
 gv["air_switch"]["os"] = gv["air_switch"]["os"].replace("{{ cl_version }}", gv["cl_version"])
@@ -51,6 +54,7 @@ env = jinja2.Environment(loader=jinja2.FileSystemLoader(
     trim_blocks=True, undefined=jinja2.StrictUndefined)
 env.filters["to_nice_json"] = lambda o, indent=2: json.dumps(o, indent=indent)
 env.filters["combine"] = lambda a, b: dict(a, **b)
+env.filters["password_hash"] = lambda pw, *a: "<hash of switch_password>"   # 미리보기용 자리표시
 out = os.path.join(R, "preview", sys.argv[1]); os.makedirs(out, exist_ok=True)
 
 def render(tpl, name, check=None, **extra):

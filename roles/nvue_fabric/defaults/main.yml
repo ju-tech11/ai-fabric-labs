@@ -2,4 +2,9 @@
 nvue_dry_run: false                  # true: replace → diff까지만, pending 폐기
 nvue_remote_file: /tmp/fabric-startup.yaml
 nvue_build_dir: "{{ playbook_dir }}/../build"
-nvue_preserve_system_keys: [aaa]     # 장비 현재 설정에서 유지할 항목(계정)
+# 장비의 현재 값을 그대로 유지할 system 항목 (템플릿에 없는 항목이 replace로 지워지지 않게)
+#  - aaa는 역할/권한(class, role)만 유지. user·tacacs·radius는 가져오지 않음 (비밀번호·키가 '*'로 가려져 있어서)
+#  - 목록에 없는 system 항목(snmp-server, syslog 등)은 replace 때 지워짐 → 쓰려면 템플릿에 추가
+#  - 비밀 값이 들어가는 항목(snmp-server 등)은 이 목록에 넣지 말 것: show가 가려서 보여줌 → 템플릿으로 관리
+nvue_preserve_system_keys: [aaa, api, control-plane, docker, ntp, ssh-server, wjh]
+nvue_password_salt: "fabriclab"      # 비밀번호 해시 salt. 고정해야 재배포 때 diff가 안 생김 (영문/숫자 16자 이내)

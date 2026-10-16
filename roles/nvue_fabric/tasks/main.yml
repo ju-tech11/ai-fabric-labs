@@ -1,17 +1,24 @@
-# 용도: 스위치 1대 배포. 계정 보존 → 템플릿 렌더링 → replace → diff 출력 → apply
+# 용도: 스위치 1대 배포. 장비 기본값 읽기 → 템플릿과 합치기 → replace → diff 출력 → apply
+#   - system 기본 항목(ssh/api/ntp 등)은 장비에 있는 값을 유지 (버전별 기본값 차이 흡수)
+#   - aaa는 역할/권한(class, role)만 가져옴. user·tacacs·radius 등은 가져오지 않음
+#     (show가 비밀번호·키를 '*'로 가려서 복사하면 잠김/인증 실패 → 템플릿이 credentials로 생성)
 ---
-- name: 현재 설정 읽기 (계정 보존용)
+- name: 현재 설정 읽기 (system 기본값 유지용)
   ansible.builtin.command: nv config show -o yaml
   register: cur
   changed_when: false
 
-- name: 렌더링 + 현재 계정(system.aaa) 합치기
+- name: 렌더링 + 장비 system 기본값 합치기 (템플릿 값이 우선)
   ansible.builtin.set_fact:
     nvue_final: >-
       {%- set sets = (cur.stdout | from_yaml or []) | selectattr('set', 'defined') | map(attribute='set') | list -%}
       {%- set sysblk = (sets[0].system | default({})) if sets else {} -%}
       {%- set keep = {} -%}
-      {%- for k in nvue_preserve_system_keys if k in sysblk -%}{%- set _ = keep.update({k: sysblk[k]}) -%}{%- endfor -%}
+      {%- for k in nvue_preserve_system_keys if k in sysblk -%}
+        {%- set v = sysblk[k] -%}
+        {%- if k == 'aaa' and v is mapping -%}{%- set v = v | dict2items | selectattr('key', 'in', ['class', 'role']) | items2dict -%}{%- endif -%}
+        {%- set _ = keep.update({k: v}) -%}
+      {%- endfor -%}
       {{ [{'set': ({'system': keep} if keep else {}) | combine(
             (lookup('ansible.builtin.template', 'startup.yaml.j2') | from_yaml)[0]['set'], recursive=True)}] }}
 
@@ -37,12 +44,13 @@
 
 - name: nv config replace → diff
   ansible.builtin.shell: "nv config replace {{ nvue_remote_file }} && nv config diff"
-  register: diff
+  register: nvdiff
+  failed_when: nvdiff.rc not in [0, 1]   # nv config diff는 변경이 있으면 1을 반환
   changed_when: false
 
 - name: diff 출력
   ansible.builtin.debug:
-    msg: "{{ diff.stdout_lines if diff.stdout | trim not in ['', '{}'] else '(변경 없음)' }}"
+    msg: "{{ nvdiff.stdout_lines if nvdiff.stdout | trim not in ['', '{}'] else '(변경 없음)' }}"
 
 - name: dry-run이면 pending 폐기
   ansible.builtin.command: nv config detach
@@ -51,4 +59,4 @@
 
 - name: nv config apply -y
   ansible.builtin.command: nv config apply -y
-  when: not (nvue_dry_run | bool) and diff.stdout | trim not in ['', '{}']
+  when: not (nvue_dry_run | bool) and nvdiff.stdout | trim not in ['', '{}']
