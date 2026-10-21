@@ -31,7 +31,12 @@
                      + (fabric_uplinks_all | selectattr('spine', 'equalto', inventory_hostname) | map(attribute='spine_port') | list) }}"
         srv_ports: "{{ fabric_links_all | selectattr('leaf', 'equalto', inventory_hostname) | map(attribute='leaf_port') | list }}"
         links_up: "{{ raw.results[0].stdout | from_json | selectattr('operstate', 'equalto', 'UP') | map(attribute='ifname') | list }}"
-        mac_ports: "{{ raw.results[1].stdout | from_json | rejectattr('state', 'defined') | selectattr('ifname', 'defined') | map(attribute='ifname') | list }}"
+        # 학습된 MAC = state가 없거나 '' / stale 인 항목 (permanent·static은 스위치 자체 MAC이라 제외)
+        fdb: "{{ raw.results[1].stdout | from_json | selectattr('ifname', 'defined') | list }}"
+    - ansible.builtin.set_fact:
+        mac_ports: "{{ (fdb | rejectattr('state', 'defined') | map(attribute='ifname') | list)
+                       + (fdb | selectattr('state', 'defined') | rejectattr('state', 'in', ['permanent', 'static'])
+                          | map(attribute='ifname') | list) }}"
     - ansible.builtin.set_fact:
         ports_down: "{{ (srv_ports + up_ports) | difference(links_up) }}"
         no_mac: "{{ srv_ports | difference(mac_ports) }}"

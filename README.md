@@ -39,7 +39,7 @@ T=compute-rail-nospine
 python3 tools/preview.py $T                                        # (노트북) 결과 확인
 # Air: topology/$T/$T.json import → ZTP에 air/ztp_cumulus.sh → Start → Enable SSH
 # oob-mgmt-server:
-git clone <저장소> && cd ai-fabric-labs && sudo apt install -y ansible sshpass
+git clone <저장소> && cd ai-fabric-labs && sudo apt install -y ansible sshpass python3-passlib
 cp inventories/$T/group_vars/all/credentials.yml{.example,}         # 비밀번호 입력
 ansible -i inventories/$T/hosts.yml all -m ping
 ansible-playbook -i inventories/$T/hosts.yml playbooks/deploy.yml -e nvue_dry_run=true
