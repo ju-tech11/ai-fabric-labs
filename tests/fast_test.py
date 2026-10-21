@@ -9,8 +9,7 @@
                    사전 점검(GPU·드라이버·CUDA·NCCL·nccl-tests·MPI·HCA·경로·SSH) → 없으면 설치 제안 → 실행 → 결과
 옵션(환경변수):
   TOPO=<토폴로지>   다른 inventory 사용 (기본: ansible.cfg)
-  DUR=5            perftest 대역폭 측정 시간(초)
-  EXTRA="-q 4"     perftest에 추가할 옵션
+  EXTRA="..."      perftest에 추가할 옵션 (QP 수·메시지 크기·방향·시간은 메뉴에서 선택)
   NCCL_EXTRA="-x NCCL_DEBUG=INFO"   mpirun에 추가할 옵션
 """
 import ipaddress
@@ -191,23 +190,99 @@ PERF = [  # (명령, 설명, 종류)
     ("ib_read_lat", "RDMA Read latency", "lat"),
     ("ib_send_lat", "Send/Recv latency", "lat"),
 ]
+SIZES = [("64KB", 65536), ("1MB", 1048576), ("1GB", 1073741824)]
+QPS = [1, 2, 4, 8]
+
+
+def human(n):
+    for u, d in (("GB", 1 << 30), ("MB", 1 << 20), ("KB", 1 << 10)):
+        if n >= d:
+            return "%g %s" % (round(n / d, 1), u)
+    return "%d B" % n
+
+
+def link_gbps(host, x):
+    """링크 속도(Gb/s): Ethernet은 NIC 속도(/sys/class/net/<NIC>/speed, Mb/s), IB는 HCA rate"""
+    cmd = ("cat /sys/class/net/%s/speed 2>/dev/null" % x["netdev"] if x["netdev"] != "-"
+           else "cat /sys/class/infiniband/%s/ports/1/rate" % x["dev"])
+    _, out = remote(host, cmd)
+    m = re.search(r"[\d.]+", out)
+    if not m:
+        return 0
+    v = float(m.group(0))
+    return v / 1000 if x["netdev"] != "-" else v
+
+
+def host_limits(host, x):
+    """(여유 메모리 bytes, HCA 최대 메시지 크기 bytes)"""
+    _, out = remote(host, "awk '/MemAvailable/{print $2*1024}' /proc/meminfo; "
+                          "ibv_devinfo -v -d %s 2>/dev/null | awk '/max_msg_sz/{print $2}'" % x["dev"])
+    v = out.split()
+    mem = int(v[0]) if v and v[0].isdigit() else 0
+    msg = int(v[1], 16) if len(v) > 1 and v[1].startswith("0x") else 0
+    return mem, msg
+
+
+def fmt(v):
+    return ("%g" % v) if v else "?"
+
+
+def bw_rows(text):
+    """perftest 결과 표의 숫자 행 [bytes, iterations, peak, average, msgrate]"""
+    return [l.split() for l in text.splitlines() if re.match(r"^\s*\d+\s+\d+\s+[\d.]+\s+[\d.]+", l)]
 
 
 def rxe_test():
     c = choose()
     tool = pick("Select the RDMA test (perftest)", [r[:2] for r in PERF], default=1)[0]
     kind = dict((r[0], r[2]) for r in PERF)[tool]
-    dur = os.environ.get("DUR", "5")
+    soft = c["x1"]["dev"].startswith("rxe")      # rxe = Soft-RoCE, 그 외(mlx5 등) = 실장비 HCA
+    bidi, qp, size_b, dur = False, 1, 0, 0
+
     if kind == "bw":
-        size = pick("Select the message size", [
-            ("64KB", "default, measure for %s sec (change with DUR)" % dur),
-            ("all", "all sizes 2B ~ 8MB (-a)")], default=1)[0]
-        opt = "--report_gbits " + ("-a" if size == "all" else "-D %s" % dur)
+        # QP 수 → 메시지 크기(메모리·HCA 한도로 거름) → 방향 → 시간
+        d_qp = 1 if soft else 4
+        rows = [(str(q), "(default%s)" % (" on Soft-RoCE" if soft else " on hardware") if q == d_qp else "") for q in QPS]
+        rows.append(("custom", "enter a number"))
+        r = pick("Select the number of QPs (parallel RDMA connections)", rows, default=QPS.index(d_qp) + 1)[0]
+        qp = int(input("Number of QPs > ").strip() or d_qp) if r == "custom" else int(r)
+
+        lim = [host_limits(c["h%d" % n], c["x%d" % n]) for n in (1, 2)]
+        mem = min(l[0] for l in lim if l[0]) if any(l[0] for l in lim) else 0
+        msg = min(l[1] for l in lim if l[1]) if any(l[1] for l in lim) else 0
+        rows, ok = [], []
+        for name, b in SIZES:
+            need = b * 2 * qp                    # perftest 버퍼 = 메시지 크기 x 2 x QP 수 (서버마다)
+            why = ""
+            if mem and need > mem * 0.8:
+                why = "not available: needs %s, free %s" % (human(need), human(mem))
+            elif msg and b > msg:
+                why = "not available: HCA max message %s" % human(msg)
+            rows.append((name, why or "memory %s per server" % human(need)))
+            ok.append(not why)
+        rows.append(("all", "all sizes 2B ~ 8MB (-a), find the size of peak BW"))
+        ok.append(True)
+        d_size = 2 if ok[1] else 1
+        while True:
+            i = rows.index(pick("Select the message size", rows, default=d_size))
+            if ok[i]:
+                break
+            print("  This size is not available with %d QP. Choose another one." % qp)
+        size_b = SIZES[i][1] if i < len(SIZES) else 0
+
+        bidi = pick("Select the direction", [
+            ("uni", "one direction host2 -> host1 (default)"),
+            ("bidi", "both directions at once (-b --report-both), TX and RX shown separately")], default=1)[0] == "bidi"
+        if size_b:
+            dur = int(input("\nTest duration in sec [Enter=10] > ").strip() or 10)
+        opt = "--report_gbits -q %d %s%s" % (qp, ("-s %d -D %d" % (size_b, dur)) if size_b else "-a",
+                                             " -b --report-both" if bidi else "")
     else:
         size = pick("Select the message size", [
             ("2B", "default (smallest message latency)"),
             ("all", "all sizes 2B ~ 8MB (-a)")], default=1)[0]
         opt = "-a" if size == "all" else ""
+
     port = 18515 + int(time.time()) % 1000
     # 연결 정보 교환은 관리망(host1 관리 IP), 측정 트래픽은 고른 HCA로. RoCE는 RoCEv2 GID 지정, IB는 불필요
     gx = lambda x: "-x %s" % x["gid"] if x["link"] == "Eth" and x["gid"] != "-" else ""
@@ -222,27 +297,51 @@ def rxe_test():
         line("host%d %s  perftest (%s)" % (n, h, tool), "OK  installed" if rc == 0 else "NG  not installed", rc == 0)
         if rc != 0:
             sys.exit("  -> ansible-playbook tests/soft-roce/install.yml  (real hardware: apt install perftest)")
+        x["gbps"] = link_gbps(h, x)
         line("host%d %s  HCA %s" % (n, h, x["dev"]),
-             "ACTIVE  %s  %s %s%s" % (x["link"], x["netdev"], x["ip"], "  GID %s" % x["gid"] if x["link"] == "Eth" else ""))
+             "ACTIVE  %s  %s %s%s  link %s Gb/s" % (x["link"], x["netdev"], x["ip"],
+                                                   "  GID %s" % x["gid"] if x["link"] == "Eth" else "", fmt(x["gbps"])))
     check_path(c)
 
+    wait = (dur or 60) + 300
     print("\nRunning: %s  %s (server) <- %s (client)" % (tool, c["h1"], c["h2"]))
-    remote(c["h1"], "nohup timeout 300 %s > /tmp/fast-rxe-test.log 2>&1 &" % srv_cmd, become=True)
+    remote(c["h1"], "nohup timeout %d %s > /tmp/fast-rxe-test.log 2>&1 &" % (wait, srv_cmd), become=True)
     time.sleep(2)
-    rc, out = remote(c["h2"], cli_cmd, become=True, timeout=360)
+    rc, out = remote(c["h2"], cli_cmd, become=True, timeout=wait + 60)
     time.sleep(1)
     _, sout = remote(c["h1"], "cat /tmp/fast-rxe-test.log", become=True)
     show("host1 %s (server)" % c["h1"], srv_cmd, sout)
     show("host2 %s (client)" % c["h2"], cli_cmd, out)
-    rows = rows_of(out if kind == "bw" else out + "\n" + sout)
-    if rc != 0 or not rows:
+
+    if kind == "lat":
+        rows = bw_rows(out + "\n" + sout)
+        if rc != 0 or not rows:
+            print("\nResult: FAIL (rc=%d)" % rc)
+        else:
+            best = min(rows, key=lambda r: float(r[5]))
+            print("\nResult: OK  t_avg %s usec (%s bytes)" % (best[5], best[0]))
+        return
+
+    total = bw_rows(out.split("Local results:")[0])
+    if rc != 0 or not total:
         print("\nResult: FAIL (rc=%d)" % rc)
-    elif kind == "bw":
-        best = max(rows, key=lambda r: float(r[3]))
-        print("\nResult: OK  BW average %s Gb/s (%s bytes)" % (best[3], best[0]))
-    else:
-        best = min(rows, key=lambda r: float(r[5]))
-        print("\nResult: OK  t_avg %s usec (%s bytes)" % (best[5], best[0]))
+        return
+    link = min(c["x1"]["gbps"], c["x2"]["gbps"])
+    pct = lambda v, l: "  = %d%% of %s Gb/s" % (round(float(v) / l * 100), fmt(l)) if l else ""
+    best = max(total, key=lambda r: float(r[3]))
+    head = "%s bytes, %d QP%s" % (best[0], qp, ", %d sec" % dur if dur else "")
+    if not bidi:
+        print("\nResult: OK  BW average %s Gb/s (%s)%s" % (best[3], head, pct(best[3], link)))
+        return
+    print("\nResult: OK  bidirectional (%s)" % head)
+    if "Local results:" in out:
+        loc = bw_rows(out.split("Local results:")[1].split("Remote results:")[0])
+        rem = bw_rows(out.split("Remote results:")[1]) if "Remote results:" in out else []
+        if loc:
+            line("TX  %s -> %s" % (c["h2"], c["h1"]), "%s Gb/s%s" % (loc[-1][3], pct(loc[-1][3], link)))
+        if rem:
+            line("RX  %s -> %s" % (c["h1"], c["h2"]), "%s Gb/s%s" % (rem[-1][3], pct(rem[-1][3], link)))
+    line("Total (TX + RX)", "%s Gb/s%s" % (best[3], pct(best[3], link * 2).replace("of ", "of 2 x link ")))
 
 
 # ---------------------------------------------------------------- fast-nccl-test

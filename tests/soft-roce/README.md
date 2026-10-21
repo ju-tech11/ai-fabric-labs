@@ -29,21 +29,22 @@ ansible-playbook tests/soft-roce/bw_test.yml -e rdma_test_server=dgx-b300-03 -e 
 ## fast-rxe-test (번호만 골라서 실행)
 ```
 fast-rxe-test
-  Select the first server for test     1  dgx-b300-01  192.168.10.1 ...
-  Select the HCA for test              ACTIVE인 장치만 (예: 1  rxe_a0  eth1  10.10.0.1/24)
-  Select the second server for test
-  Select the HCA for test
-  Select the RDMA test (perftest)      ib_write_bw(기본) / ib_read_bw / ib_send_bw / ib_write_lat / ib_read_lat / ib_send_lat
-  Select the message size              대역폭: 64KB를 DUR초(기본) 또는 전체 크기(-a) / 지연: 2B(기본) 또는 전체 크기(-a)
-[Preflight Check]  perftest / HCA (ACTIVE, Eth/IB, GID) / RDMA network path (RoCE만, ping)
+  Select the first server / HCA        ACTIVE인 HCA만 표시 (예: 1  rxe_a0  Eth  eth1  10.10.0.1/24)
+  Select the second server / HCA
+  Select the RDMA test (perftest)      ib_write_bw(기본) / ib_read_bw / ib_send_bw / *_lat
+  Select the number of QPs             1 / 2 / 4 / 8 / custom  (기본: Soft-RoCE 1, 실장비 4)
+  Select the message size              64KB / 1MB(기본) / 1GB / all(-a)
+                                       메모리(크기 x 2 x QP)·HCA 최대 메시지보다 크면 "not available"
+  Select the direction                 uni(기본) / bidi(-b --report-both, TX·RX 따로)
+  Test duration in sec [Enter=10]
+[Preflight Check]  perftest / HCA (ACTIVE, Eth/IB, GID, link 속도) / RDMA network path (RoCE만, ping)
 ```
-- Ethernet(RoCE·Soft-RoCE)과 InfiniBand 모두 지원: 연결 정보는 관리망(host1 관리 IP)으로 주고받고, 측정 트래픽은 고른 HCA로
-  - RoCE: 그 HCA의 RoCEv2 IPv4 GID 번호를 자동으로 찾아 `-x <GID>` 지정
-  - IB: IP·GID 필요 없음
-- 첫 서버에서 받는 쪽(백그라운드), 두 번째 서버에서 보내는 쪽(`... <host1 관리 IP>`) 실행 → 두 출력과 결과(Gb/s 또는 usec)를 여기서 표시
-- 서브넷이 다른 HCA(다른 rail/plane)를 고르면 경고
-- 옵션: `DUR=10`(측정 시간), `EXTRA="-q 4"`(perftest 옵션 추가), `TOPO=<토폴로지>`
-- perftest는 점대점 측정 도구 → AllReduce 같은 집합통신은 fast-nccl-test
+- 대역폭 테스트는 항상 `--report_gbits` (Gb/s)
+- 결과: 단방향 `Result: OK  BW average 385.20 Gb/s (1048576 bytes, 4 QP, 10 sec)  = 96% of 400 Gb/s`
+- 양방향: `TX host2 -> host1`, `RX host1 -> host2`, `Total (TX + RX) ... of 2 x link`
+- 링크 속도: Ethernet은 `/sys/class/net/<NIC>/speed`, IB는 HCA rate
+- Soft-RoCE는 CPU 처리라 QP·메시지를 키우면 오히려 느려질 수 있음 (Air 숫자는 동작 확인용)
+- 옵션: `EXTRA="..."`(perftest 옵션 추가), `TOPO=<토폴로지>`
 
 ## 수동으로 한 rail만
 ```
