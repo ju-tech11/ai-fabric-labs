@@ -57,15 +57,22 @@ def ver(v):
     return tuple(int(x) for x in re.findall(r"\d+", v or "")[:2]) or (0,)
 
 
+def ask(prompt):
+    """입력 받기. 어느 질문에서든 q 를 입력하면 바로 종료"""
+    s = input(prompt).strip()
+    if s.lower() in ("q", "quit", "exit"):
+        print("Quit.")
+        sys.exit(0)
+    return s
+
+
 def pick(title, rows, default=None):
     print("\n" + title)
     for i, r in enumerate(rows, 1):
         print("  %2d  %s" % (i, "   ".join(r)))
     hint = " [Enter=%d]" % default if default else ""
     while True:
-        s = input("Enter number%s (q: quit) > " % hint).strip()
-        if s.lower() == "q":
-            sys.exit(0)
+        s = ask("Enter number%s > " % hint)
         if not s and default:
             return rows[default - 1]
         if s.isdigit() and 1 <= int(s) <= len(rows):
@@ -74,7 +81,7 @@ def pick(title, rows, default=None):
 
 
 def ask_yes(q, default=True):
-    s = input("%s [%s] > " % (q, "Y/n" if default else "y/N")).strip().lower()
+    s = ask("%s [%s] > " % (q, "Y/n" if default else "y/N")).lower()
     return default if not s else s == "y"
 
 
@@ -249,14 +256,12 @@ def rxe_test():
                                      "(default on hardware)" if not soft and q == d_qp else ""))
         print("  %3d   custom" % 0)
         while True:
-            v = input("Enter QPs [Enter=%d] (q: quit) > " % d_qp).strip()
-            if v.lower() == "q":
-                sys.exit(0)
+            v = ask("Enter QPs [Enter=%d] > " % d_qp)
             if not v:
                 qp = d_qp
                 break
             if v == "0":
-                v = input("Number of QPs > ").strip()
+                v = ask("Number of QPs > ")
             if v.isdigit() and int(v) > 0:
                 qp = int(v)
                 break
