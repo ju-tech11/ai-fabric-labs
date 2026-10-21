@@ -58,12 +58,46 @@ def ver(v):
 
 
 def ask(prompt):
-    """입력 받기. 어느 질문에서든 q 를 입력하면 바로 종료"""
-    s = input(prompt).strip()
-    if s.lower() in ("q", "quit", "exit"):
-        print("Quit.")
-        sys.exit(0)
-    return s
+    """입력 받기. 첫 글자로 q 를 누르면 Enter 없이 바로 종료 (터미널일 때). Backspace 지원"""
+    if not sys.stdin.isatty():                      # 파이프·자동 입력일 때는 한 줄 단위
+        s = input(prompt).strip()
+        if s.lower() in ("q", "quit", "exit"):
+            print("Quit.")
+            sys.exit(0)
+        return s
+    import termios
+    import tty
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    buf = ""
+    try:
+        tty.setcbreak(fd)                           # 한 글자씩 바로 읽기 (화면 표시는 직접)
+        while True:
+            ch = sys.stdin.read(1)
+            if ch in ("\r", "\n"):
+                sys.stdout.write("\n")
+                break
+            if ch in ("\x7f", "\b"):                # Backspace
+                if buf:
+                    buf = buf[:-1]
+                    sys.stdout.write("\b \b")
+            elif ch == "\x1b":                       # 방향키 등 특수키는 무시
+                sys.stdin.read(2)
+            elif ch == "\x04" and not buf:           # Ctrl+D
+                raise EOFError
+            elif ch.lower() == "q" and not buf:
+                sys.stdout.write("q\nQuit.\n")
+                sys.stdout.flush()
+                sys.exit(0)
+            elif ch.isprintable():
+                buf += ch
+                sys.stdout.write(ch)
+            sys.stdout.flush()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)   # 터미널 원래대로
+    return buf.strip()
 
 
 def pick(title, rows, default=None):
