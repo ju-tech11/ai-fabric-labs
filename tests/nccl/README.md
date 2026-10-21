@@ -1,6 +1,5 @@
 # nccl — NCCL + nccl-tests
 
-RDMA 장치가 먼저 필요하므로 `install.yml`이 `../soft-roce/install.yml`을 먼저 실행한다 (`rdma_mode: hw`면 그 단계는 건너뜀).
 NCCL은 **NVIDIA GPU가 있어야 실행**된다. Air 서버(generic/ubuntu2204 VM)는 GPU가 없어서 NCCL을 실행할 수 없다.
 - `install.yml`: GPU가 없으면 NCCL 설치를 건너뜀 (설치 과정만 연습: `-e nccl_force=true`)
 - `fast-nccl-test`: GPU가 없으면 `Cannot find GPU. Just printing the command.` 후 실행될 명령만 보여줌
@@ -9,7 +8,6 @@ NCCL은 **NVIDIA GPU가 있어야 실행**된다. Air 서버(generic/ubuntu2204 
 ## 설치되는 것 (서버, 순서대로)
 | 순서 | 항목 | 어디에 | 비고 |
 |---|---|---|---|
-| 0 | soft-roce 전체 | `../soft-roce` | rdma_mode: soft 일 때 |
 | 0 | GPU 확인 | | 0EA면 아래 전부 건너뜀 |
 | 1 | apt: `build-essential`, `git`, `wget` | 시스템 | make·gcc |
 | 1 | apt: `openmpi-bin`, `libopenmpi-dev` | `/usr/bin/mpirun`, `/usr/lib/<arch>/openmpi` | 여러 서버 동시 실행용 MPI |

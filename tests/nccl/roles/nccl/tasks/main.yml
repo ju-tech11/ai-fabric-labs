@@ -109,7 +109,8 @@
 - name: "[3] Build nccl-tests (MPI=1, takes a while)"
   ansible.builtin.shell: >-
     make -j$(nproc) MPI=1 MPI_HOME={{ mpi_home }} CUDA_HOME={{ cuda_home }} NCCL_HOME=/usr
-    {% if nccl_tests_gencode %}NVCC_GENCODE="{{ nccl_tests_gencode }}"{% endif %}
+    {% set gc = nccl_tests_gencode or ('-gencode=arch=compute_90,code=sm_90' if plan.gpu | default('0') == '0' else '') %}
+    {% if gc %}NVCC_GENCODE="{{ gc }}"{% endif %}
   args:
     chdir: "{{ nccl_tests_dir }}"
     executable: /bin/bash

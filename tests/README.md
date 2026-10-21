@@ -12,24 +12,24 @@ tests/
     bw_test.yml         rail별 ib_write_bw 전체 자동
     fast-rxe-test       서버 2대·HCA를 골라 ib_write_bw 1번
     roles/soft_roce/
-  nccl/                 NCCL + nccl-tests (soft-roce에 의존 → install.yml이 먼저 자동 실행)
+  nccl/                 NCCL + nccl-tests
     install.yml         설치·빌드
     run.yml             서버 1대 안에서 실행 (GPU 있는 서버만)
     fast-nccl-test      서버 2대·HCA를 골라 nccl-tests 2대 실행
     roles/nccl/
 ```
 
-## 의존 관계
+## 언제 무엇을 쓰나
 ```
-playbooks/site.yml (네트워크·서버 IP)  →  tests/soft-roce/install.yml  →  tests/nccl/install.yml
-                                          (rdma_mode: soft 일 때만)        (soft-roce를 먼저 자동 실행)
+playbooks/site.yml (네트워크·서버 IP) ─┬─ tests/soft-roce/install.yml   RDMA NIC 없는 서버 (Air 등)
+                                      └─ tests/nccl/install.yml        GPU 서버
 ```
 
 ## 실행 (oob-mgmt-server, 레포 최상위 폴더에서)
 ```
 ansible-playbook tests/soft-roce/install.yml     # RDMA 장치
 ansible-playbook tests/soft-roce/bw_test.yml     # rail별 대역폭 → results/<토폴로지>-rdma.txt
-ansible-playbook tests/nccl/install.yml          # NCCL·nccl-tests (soft-roce 포함)
+ansible-playbook tests/nccl/install.yml          # NCCL·nccl-tests (GPU 서버)
 ansible-playbook tests/nccl/run.yml              # GPU 있을 때만 실행
 fast-rxe-test                                    # 번호 선택 → ib_write_bw
 fast-nccl-test                                   # 번호 선택 → nccl-tests 2대

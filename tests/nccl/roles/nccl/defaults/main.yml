@@ -21,12 +21,12 @@ nccl_tests_repo: https://github.com/NVIDIA/nccl-tests.git
 nccl_tests_version: master
 nccl_tests_dir: /opt/nccl-tests
 nccl_mpi_home: ""           # 비우면 mpicc로 자동 확인. HPC-X 등 쓰면 경로 지정
-# 빌드할 GPU 아키텍처. 비우면 전체(느림). Air는 GPU가 없으니 1개만 빌드해서 시간 단축
-nccl_tests_gencode: "{{ '-gencode=arch=compute_90,code=sm_90' if rdma_mode | default('soft') == 'soft' else '' }}"
+# 빌드할 GPU 아키텍처. 비우면 nvcc가 지원하는 전체로 빌드. GPU가 없는 연습 설치(nccl_force)는 자동으로 1개만 빌드
+nccl_tests_gencode: ""
 
 # ④ /etc/nccl.conf (NCCL이 자동으로 읽음, 환경변수가 있으면 환경변수 우선)
 #   RoCE(rdma_link: ethernet)일 때만 GID·TC를 씀. InfiniBand는 필요 없음
-nccl_ib_gid_index: "{{ 1 if rdma_mode | default('soft') == 'soft' else 3 }}"   # RoCEv2 IPv4 GID (rxe=1, ConnectX 보통 3 → show_gids로 확인)
+nccl_ib_gid_index: 3            # RoCEv2 IPv4 GID (ConnectX 보통 3 → show_gids로 확인). fast-nccl-test는 HCA마다 자동으로 찾아 넣음
 nccl_ib_tc: 106                 # DSCP 26(=104) + ECN(2), 스위치 qos roce 기본값과 맞춤
 nccl_socket_ifname: eth0        # 부트스트랩(초기 연결)용 관리 NIC (실장비 이름으로)
 nccl_debug: WARN
