@@ -32,14 +32,13 @@ fast-rxe-test
   Select the first server / HCA        ACTIVE인 HCA만 표시 (예: 1  rxe_a0  Eth  eth1  10.10.0.1/24)
   Select the second server / HCA
   Select the RDMA test (perftest)      ib_write_bw(기본) / ib_read_bw / ib_send_bw / *_lat
-  Select the number of QPs             1 / 2 / 4 / 8 / custom  (기본: Soft-RoCE 1, 실장비 4)
+  Select the number of QPs             QP 수를 바로 입력: 1 / 2 / 4 / 8, 0 = 직접 입력 (기본: Soft-RoCE 1, 실장비 4)
   Select the message size              64KB / 1MB(기본) / 1GB / all(-a)
-                                       메모리(크기 x 2 x QP)·HCA 최대 메시지보다 크면 "not available"
-  Select the direction                 uni(기본) / bidi(-b --report-both, TX·RX 따로)
-  Test duration in sec [Enter=10]
+                                       메모리(크기 x 2 x QP)나 HCA 최대 메시지를 넘는 크기는 목록에서 빠짐
+  Select the direction                 Unidirectional(기본) / Bidirectional(-b --report-both, TX·RX 따로)
 [Preflight Check]  perftest / HCA (ACTIVE, Eth/IB, GID, link 속도) / RDMA network path (RoCE만, ping)
 ```
-- 대역폭 테스트는 항상 `--report_gbits` (Gb/s)
+- 대역폭 테스트는 항상 `--report_gbits` (Gb/s), 측정 시간 10초 고정 (`DUR=20 fast-rxe-test`로 변경)
 - 결과: 단방향 `Result: OK  BW average 385.20 Gb/s (1048576 bytes, 4 QP, 10 sec)  = 96% of 400 Gb/s`
 - 양방향: `TX host2 -> host1`, `RX host1 -> host2`, `Total (TX + RX) ... of 2 x link`
 - 링크 속도: Ethernet은 `/sys/class/net/<NIC>/speed`, IB는 HCA rate

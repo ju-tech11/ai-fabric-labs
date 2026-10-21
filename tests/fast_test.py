@@ -9,7 +9,8 @@
                    사전 점검(GPU·드라이버·CUDA·NCCL·nccl-tests·MPI·HCA·경로·SSH) → 없으면 설치 제안 → 실행 → 결과
 옵션(환경변수):
   TOPO=<토폴로지>   다른 inventory 사용 (기본: ansible.cfg)
-  EXTRA="..."      perftest에 추가할 옵션 (QP 수·메시지 크기·방향·시간은 메뉴에서 선택)
+  DUR=10           perftest 대역폭 측정 시간(초)
+  EXTRA="..."      perftest에 추가할 옵션 (QP 수·메시지 크기·방향은 메뉴에서 선택)
   NCCL_EXTRA="-x NCCL_DEBUG=INFO"   mpirun에 추가할 옵션
 """
 import ipaddress
@@ -240,41 +241,42 @@ def rxe_test():
     bidi, qp, size_b, dur = False, 1, 0, 0
 
     if kind == "bw":
-        # QP 수 → 메시지 크기(메모리·HCA 한도로 거름) → 방향 → 시간
+        # QP 수 → 메시지 크기(메모리·HCA 한도를 넘는 크기는 목록에서 뺌) → 방향. 측정 시간은 DUR(기본 10초)
         d_qp = 1 if soft else 4
-        rows = [(str(q), "(default%s)" % (" on Soft-RoCE" if soft else " on hardware") if q == d_qp else "") for q in QPS]
-        rows.append(("custom", "enter a number"))
-        r = pick("Select the number of QPs (parallel RDMA connections)", rows, default=QPS.index(d_qp) + 1)[0]
-        qp = int(input("Number of QPs > ").strip() or d_qp) if r == "custom" else int(r)
+        print("\nSelect the number of QPs (parallel RDMA connections)")
+        for q in QPS:
+            print("  %3d   %s" % (q, "(default on Soft-RoCE)" if soft and q == d_qp else
+                                     "(default on hardware)" if not soft and q == d_qp else ""))
+        print("  %3d   custom" % 0)
+        while True:
+            v = input("Enter QPs [Enter=%d] (q: quit) > " % d_qp).strip()
+            if v.lower() == "q":
+                sys.exit(0)
+            if not v:
+                qp = d_qp
+                break
+            if v == "0":
+                v = input("Number of QPs > ").strip()
+            if v.isdigit() and int(v) > 0:
+                qp = int(v)
+                break
+            print("  Enter one of %s, or 0 for custom" % ", ".join(map(str, QPS)))
 
         lim = [host_limits(c["h%d" % n], c["x%d" % n]) for n in (1, 2)]
         mem = min(l[0] for l in lim if l[0]) if any(l[0] for l in lim) else 0
         msg = min(l[1] for l in lim if l[1]) if any(l[1] for l in lim) else 0
-        rows, ok = [], []
-        for name, b in SIZES:
-            need = b * 2 * qp                    # perftest 버퍼 = 메시지 크기 x 2 x QP 수 (서버마다)
-            why = ""
-            if mem and need > mem * 0.8:
-                why = "not available: needs %s, free %s" % (human(need), human(mem))
-            elif msg and b > msg:
-                why = "not available: HCA max message %s" % human(msg)
-            rows.append((name, why or "memory %s per server" % human(need)))
-            ok.append(not why)
-        rows.append(("all", "all sizes 2B ~ 8MB (-a), find the size of peak BW"))
-        ok.append(True)
-        d_size = 2 if ok[1] else 1
-        while True:
-            i = rows.index(pick("Select the message size", rows, default=d_size))
-            if ok[i]:
-                break
-            print("  This size is not available with %d QP. Choose another one." % qp)
-        size_b = SIZES[i][1] if i < len(SIZES) else 0
+        sizes = [(name, b) for name, b in SIZES
+                 if not (mem and b * 2 * qp > mem * 0.8) and not (msg and b > msg)]   # perftest 버퍼 = 크기 x 2 x QP
+        rows = [(name, "(default)" if b == 1048576 else "") for name, b in sizes]
+        rows.append(("all", "all sizes 2B ~ 8MB (-a)"))
+        d_size = next((i + 1 for i, (_, b) in enumerate(sizes) if b == 1048576), 1)
+        name = pick("Select the message size", rows, default=d_size)[0]
+        size_b = dict(sizes).get(name, 0)
 
         bidi = pick("Select the direction", [
-            ("uni", "one direction host2 -> host1 (default)"),
-            ("bidi", "both directions at once (-b --report-both), TX and RX shown separately")], default=1)[0] == "bidi"
-        if size_b:
-            dur = int(input("\nTest duration in sec [Enter=10] > ").strip() or 10)
+            ("Unidirectional", "host2 -> host1 (default)"),
+            ("Bidirectional", "both directions at once, TX and RX shown separately")], default=1)[0] == "Bidirectional"
+        dur = int(os.environ.get("DUR", "10")) if size_b else 0
         opt = "--report_gbits -q %d %s%s" % (qp, ("-s %d -D %d" % (size_b, dur)) if size_b else "-a",
                                              " -b --report-both" if bidi else "")
     else:
