@@ -1,0 +1,72 @@
+# 용도: rail별 RDMA Write 대역폭 테스트 (ib_write_bw). 서버 2대 사이, plane·rail마다 1번씩
+#   먼저: ansible-playbook tests/soft-roce/install.yml (Air) / 실장비는 rdma_dev_map 지정
+#   ansible-playbook tests/soft-roce/bw_test.yml
+#   ansible-playbook tests/soft-roce/bw_test.yml -e rdma_test_server=dgx-b300-03 -e rdma_test_client=dgx-b300-04 -e rdma_test_duration=5
+#   결과: results/<fabric_name>-rdma.txt
+#   ※ Air(soft)는 CPU로 흉내 내는 것이라 숫자는 의미 없음. 동작 여부(OK/FAIL)만 확인
+---
+- name: RDMA bandwidth per rail
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    srv: "{{ rdma_test_server | default(groups['servers'][0]) }}"
+    cli: "{{ rdma_test_client | default(groups['servers'][1]) }}"
+    dur: "{{ rdma_test_duration | default(3) | int }}"
+    port_base: 18515
+  tasks:
+    - name: Build plane/rail test list
+      ansible.builtin.set_fact:
+        pairs: >-
+          {%- set out = [] -%}
+          {%- for s in fabric_links_all | selectattr('server', 'equalto', srv) | sort(attribute='server_iface_index') -%}
+          {%- for c in fabric_links_all | selectattr('server', 'equalto', cli) | selectattr('plane', 'equalto', s.plane) | selectattr('rail', 'equalto', s.rail) -%}
+          {%- set key = s.plane ~ '-' ~ s.rail -%}
+          {%- set _ = out.append({'plane': s.plane, 'rail': s.rail, 'srv_ip': s.server_ip,
+                'srv_dev': (rdma_dev_map | default({})).get(key, 'rxe_' ~ s.plane ~ s.rail),
+                'cli_dev': (rdma_dev_map | default({})).get(key, 'rxe_' ~ s.plane ~ s.rail),
+                'port': port_base + (s.server_iface_index | int)}) -%}
+          {%- endfor -%}
+          {%- endfor -%}
+          {{ out }}
+
+    - name: Start servers on {{ srv }} (background)
+      ansible.builtin.shell: >-
+        timeout {{ (dur | int + 10) * (pairs | length) + 30 }}
+        ib_write_bw -d {{ item.srv_dev }} -R -F -p {{ item.port }} -D {{ dur }} --report_gbits
+      delegate_to: "{{ srv }}"
+      become: true
+      async: "{{ (dur | int + 10) * (pairs | length) + 60 }}"
+      poll: 0
+      loop: "{{ pairs }}"
+      loop_control: {label: "plane-{{ item.plane }} rail{{ item.rail }}"}
+      changed_when: false
+
+    - ansible.builtin.pause: {seconds: 3}
+
+    - name: Run clients on {{ cli }}
+      ansible.builtin.shell: >-
+        ib_write_bw -d {{ item.cli_dev }} -R -F -p {{ item.port }} -D {{ dur }} --report_gbits {{ item.srv_ip }}
+      delegate_to: "{{ cli }}"
+      become: true
+      loop: "{{ pairs }}"
+      loop_control: {label: "plane-{{ item.plane }} rail{{ item.rail }} -> {{ item.srv_ip }}"}
+      register: bw
+      changed_when: false
+      failed_when: false
+
+    - name: Summary
+      ansible.builtin.set_fact:
+        rdma_summary: |-
+          RDMA Write  {{ cli }} -> {{ srv }}  ({{ dur }} sec each)
+          {% for r in bw.results %}
+          {% set v = r.stdout | default('') | regex_findall('(?m)^\s*\d+\s+\d+\s+[\d.]+\s+([\d.]+)') %}
+          plane-{{ r.item.plane }} rail{{ r.item.rail }} {{ r.item.cli_dev }}->{{ r.item.srv_dev }}: {{ ('OK ' ~ v[-1] ~ ' Gb/s') if (r.rc == 0 and v) else ('FAIL ' ~ (r.stderr | default('') | trim | truncate(80))) }}
+          {% endfor %}
+
+    - ansible.builtin.copy:
+        content: "{{ rdma_summary }}\n"
+        dest: "{{ playbook_dir }}/../../results/{{ fabric_name }}-rdma.txt"
+        mode: "0644"
+
+    - ansible.builtin.debug: {msg: "{{ rdma_summary.split('\n') }}"}

@@ -1,0 +1,13 @@
+# 용도: 부팅 후 rail NIC에 IP가 올라온 다음 Soft-RoCE 장치 생성 (Ansible 생성)
+[Unit]
+Description=Create Soft-RoCE (rxe) devices on rail NICs
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/rxe-setup.sh
+
+[Install]
+WantedBy=multi-user.target

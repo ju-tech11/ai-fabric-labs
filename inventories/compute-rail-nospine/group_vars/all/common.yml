@@ -13,6 +13,13 @@ server_mtu: 9000
 server_iface_format: "eth{index}"       # Air 기준. 실장비는 server_iface_map으로 덮어씀
 server_iface_map: {}                    # 예) {a-0: enp27s0f0np0, b-0: enp27s0f1np1, ...}
 
+# 테스트 라이브러리 (tests/) → tests/README.md
+#   rdma_mode  soft : Air 등 가상 NIC. Soft-RoCE(rdma_rxe)로 rail NIC마다 RDMA 장치 rxe_<plane><rail> (예: rxe_a0=eth1)
+#              hw   : 실장비 ConnectX. 드라이버는 장비 OS 것 사용 (soft-roce 설치 건너뜀)
+rdma_mode: soft
+rdma_link: ethernet                     # ethernet(RoCE) / infiniband → NCCL GID·TC 설정 여부
+rdma_dev_map: {}                        # 실장비: {a-0: mlx5_0, b-0: mlx5_1, ...} (`rdma link`로 확인). 비우면 rxe_<plane><rail>
+
 # 스위치 포트 규칙
 subports_per_cage: 2                    # 800G → 2x400G : swpNs0, swpNs1
 switch_cage_count: 64                   # SN5610

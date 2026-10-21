@@ -20,6 +20,8 @@ roles/                            공통: nvue_fabric(스위치), server_netplan
 topology/<토폴로지>/               생성된 Air import 파일(.json/.dot), links.md  ※ 직접 수정 금지
 air/ztp_cumulus.sh                Air ZTP (스위치 초기 비밀번호)
 tools/preview.py                  Ansible 없이 미리보기
+tests/                            테스트 라이브러리: soft-roce, nccl … (tests/README.md)
+air/bootstrap_oob.sh              oob-mgmt-server 준비 한 번에 (설치·clone·credentials)
 ```
 
 ## 이름·관리 IP (compute-rail-nospine)
@@ -38,13 +40,16 @@ tools/preview.py                  Ansible 없이 미리보기
 T=compute-rail-nospine
 python3 tools/preview.py $T                                        # (노트북) 결과 확인
 # Air: topology/$T/$T.json import → ZTP에 air/ztp_cumulus.sh → Start → Enable SSH
-# oob-mgmt-server:
-git clone <저장소> && cd ai-fabric-labs && sudo apt install -y ansible sshpass python3-passlib
-cp inventories/$T/group_vars/all/credentials.yml{.example,}         # 비밀번호 입력
+# oob-mgmt-server (설치·clone·credentials.yml 준비를 한 번에):
+curl -fsSL https://raw.githubusercontent.com/ju-tech11/ai-fabric-labs/main/air/bootstrap_oob.sh | bash
+cd ~/ai-fabric-labs && nano inventories/$T/group_vars/all/credentials.yml   # 비밀번호 입력 (따옴표 유지)
 ansible -i inventories/$T/hosts.yml all -m ping
 ansible-playbook -i inventories/$T/hosts.yml playbooks/deploy.yml -e nvue_dry_run=true
 ansible-playbook -i inventories/$T/hosts.yml playbooks/site.yml
-cat results/$T-summary.txt                                          # → Air Stop
+cat results/$T-summary.txt
+# 테스트 (tests/README.md)
+ansible-playbook tests/soft-roce/install.yml && ansible-playbook tests/soft-roce/bw_test.yml
+ansible-playbook tests/nccl/install.yml                             # → Air Checkpoint → Stop
 ```
 `-i`를 생략하면 ansible.cfg의 기본값(compute-rail-nospine)이 쓰임.
 

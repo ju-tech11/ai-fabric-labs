@@ -1,0 +1,3 @@
+#!/bin/bash
+# 용도: oob-mgmt-server에서 서버·HCA를 번호로 골라 nccl-tests 2대 실행 (본체: tests/fast_test.py)
+exec python3 "$(dirname "$(readlink -f "$0")")/../fast_test.py" nccl "$@"

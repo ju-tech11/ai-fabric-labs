@@ -1,0 +1,17 @@
+# 용도: 토폴로지의 서버 전체에 Soft-RoCE 설치 (rdma_mode: soft 일 때만, hw면 건너뜀)
+#   ansible-playbook tests/soft-roce/install.yml
+#   ansible-playbook tests/soft-roce/install.yml --limit dgx-b300-01,dgx-b300-02
+#   다른 토폴로지: -i inventories/<이름>/hosts.yml
+---
+- name: Install Soft-RoCE
+  hosts: servers
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check rdma_mode
+      ansible.builtin.debug:
+        msg: "rdma_mode={{ rdma_mode | default('soft') }} -> {{ 'install Soft-RoCE' if rdma_mode | default('soft') == 'soft' else 'hardware RDMA, Soft-RoCE skipped' }}"
+
+    - ansible.builtin.include_role:
+        name: soft_roce
+      when: rdma_mode | default('soft') == 'soft'

@@ -1,0 +1,9 @@
+---
+# 용도: Soft-RoCE 설치 기본값 (토폴로지별 값은 inventories/<토폴로지>/group_vars/all/common.yml)
+soft_roce_packages:
+  - rdma-core          # RDMA 기본 라이브러리·도구 (rdma 명령, libibverbs, librdmacm)
+  - ibverbs-utils      # ibv_devices, ibv_devinfo (장치 확인)
+  - rdmacm-utils       # rping, ucmatose (연결 테스트)
+  - perftest           # ib_write_bw, ib_read_bw, ib_send_lat (대역폭·지연 측정)
+  - infiniband-diags   # ibstat 등 진단
+rdma_dev_map: {}

@@ -1,0 +1,41 @@
+# 용도: nccl-tests 실행 (서버 1대씩, 그 서버의 GPU 전체). GPU가 없으면(Air) 건너뜀
+#   ansible-playbook tests/nccl/run.yml
+#   ansible-playbook tests/nccl/run.yml -e nccl_max_bytes=8G
+#   여러 서버 동시 실행(rail·PXN 확인)은 README의 mpirun 예시 참고
+---
+- name: NCCL single-server test
+  hosts: servers
+  gather_facts: false
+  become: true
+  vars:
+    nccl_tests_dir: /opt/nccl-tests
+    max_bytes: "{{ nccl_max_bytes | default('1G') }}"
+  tasks:
+    - name: Check GPU
+      ansible.builtin.shell: nvidia-smi -L 2>/dev/null | grep -c '^GPU' || true
+      register: ngpu
+      changed_when: false
+
+    - name: No GPU -> skip
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: Cannot find GPU (Air etc) -> nccl-tests cannot run"
+      when: ngpu.stdout | int == 0
+
+    - ansible.builtin.meta: end_host
+      when: ngpu.stdout | int == 0
+
+    - name: all_reduce_perf / alltoall_perf
+      ansible.builtin.shell: |
+        for t in all_reduce_perf alltoall_perf; do
+          echo "== $t"; {{ nccl_tests_dir }}/build/$t -b 8 -e {{ max_bytes }} -f 2 -g {{ ngpu.stdout }}
+        done
+      args: {executable: /bin/bash}
+      register: out
+      changed_when: false
+
+    - ansible.builtin.copy:
+        content: "{{ out.stdout }}\n"
+        dest: "{{ playbook_dir }}/../../results/{{ fabric_name }}-nccl-{{ inventory_hostname }}.txt"
+        mode: "0644"
+      delegate_to: localhost
+      become: false

@@ -1,0 +1,11 @@
+# 용도: NCCL 기본 설정 (Ansible 생성). NCCL이 /etc/nccl.conf 를 자동으로 읽음, 환경변수가 있으면 환경변수 우선
+{% if rdma_link | default('ethernet') == 'ethernet' %}
+# RoCE: RoCEv2 IPv4 GID, 트래픽 클래스
+NCCL_IB_GID_INDEX={{ nccl_ib_gid_index }}
+NCCL_IB_TC={{ nccl_ib_tc }}
+{% endif %}
+NCCL_SOCKET_IFNAME={{ nccl_socket_ifname }}
+NCCL_DEBUG={{ nccl_debug }}
+{% if rdma_dev_map | default({}) %}
+NCCL_IB_HCA={{ rdma_dev_map.values() | unique | join(',') }}
+{% endif %}

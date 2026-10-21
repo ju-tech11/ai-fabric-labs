@@ -1,0 +1,26 @@
+# 용도: 토폴로지의 서버 전체에 NCCL + nccl-tests 설치
+#   의존: RDMA 장치가 먼저 있어야 함 → Air(rdma_mode: soft)면 soft-roce 설치를 먼저 자동 실행
+#   GPU가 없는 서버(Air 등)는 NCCL 설치를 건너뜀 (실행이 불가능하므로). 설치 과정만 연습하려면 -e nccl_force=true
+#   ansible-playbook tests/nccl/install.yml
+#   ansible-playbook tests/nccl/install.yml --limit dgx-b300-01,dgx-b300-02
+---
+- import_playbook: ../soft-roce/install.yml
+
+- name: Install NCCL and nccl-tests
+  hosts: servers
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check GPU
+      ansible.builtin.shell: nvidia-smi -L 2>/dev/null | grep -c '^GPU' || true
+      register: gpu
+      changed_when: false
+
+    - name: No GPU -> skip
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: GPU 0EA -> NCCL install skipped (Air etc). To rehearse the install anyway: -e nccl_force=true"
+      when: gpu.stdout | int == 0 and not (nccl_force | default(false) | bool)
+
+    - ansible.builtin.include_role:
+        name: nccl
+      when: gpu.stdout | int > 0 or (nccl_force | default(false) | bool)

@@ -1,0 +1,155 @@
+# 용도: ① 빌드 도구·MPI → ② NCCL + CUDA 컴파일러(없을 때만) → ③ nccl-tests 빌드 → ④ /etc/nccl.conf
+---
+- name: "[1] Install build tools and MPI"
+  ansible.builtin.apt:
+    name: "{{ nccl_base_packages }}"
+    update_cache: true
+    cache_valid_time: 3600
+  environment: {DEBIAN_FRONTEND: noninteractive, NEEDRESTART_MODE: l}
+
+- name: "[2] Check GPU driver / CUDA toolkit / NCCL (decide versions to install)"
+  ansible.builtin.shell: |
+    ver_le(){ [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ]; }   # $1 <= $2
+    N=$(command -v nvcc || ls -d /usr/local/cuda*/bin/nvcc 2>/dev/null | sort -V | tail -1)
+    TK=$([ -n "$N" ] && $N --version | grep -oE 'release [0-9.]+' | awk '{print $2}')
+    NC=$(ls /usr/lib/*/libnccl.so.2.* /usr/local/lib/libnccl.so.2.* 2>/dev/null | head -1 | sed 's/.*libnccl.so.//')
+    NCU=$(dpkg-query -W -f='${Version}' libnccl2 2>/dev/null | grep -oE 'cuda[0-9.]+' | sed 's/cuda//')
+    D=$(nvidia-smi 2>/dev/null | grep -oE 'CUDA Version: [0-9.]+' | awk '{print $3}')
+    echo gpu=$(nvidia-smi -L 2>/dev/null | grep -c '^GPU')
+    echo drv=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1)
+    echo drvcuda=$D; echo tk=$TK; echo nc=$NC; echo ncu=$NCU
+    # 없는 게 있으면 NVIDIA CUDA 저장소 등록 후 설치할 버전 결정
+    if [ -z "$TK" ] || [ -z "$NC" ]; then
+      if [ ! -f /usr/share/keyrings/cuda-archive-keyring.gpg ]; then
+        . /etc/os-release; R=ubuntu${VERSION_ID//./}; A=$(uname -m); [ "$A" = aarch64 ] && A=sbsa
+        wget -q -O /tmp/cuda-keyring.deb https://developer.download.nvidia.com/compute/cuda/repos/$R/$A/cuda-keyring_{{ cuda_keyring_version }}_all.deb
+        dpkg -i /tmp/cuda-keyring.deb >/dev/null
+      fi
+      apt-get update -qq
+      V="{{ nccl_version }}"
+      if [ -z "$NC" ]; then                     # NCCL: 툴킷 CUDA(없으면 드라이버 CUDA) 이하로 빌드된 것 중 최신
+        T=${TK:-$D}
+        if [ -z "$V" ] && [ -n "$T" ]; then
+          for c in $(apt-cache madison libnccl2 | awk '{print $3}' | sort -rV); do ver_le "${c##*+cuda}" "$T" && { V=$c; break; }; done
+        fi
+        [ -z "$V" ] && V=$(apt-cache policy libnccl2 | awk '/Candidate:/{print $2}')
+        echo nccl_pkg=$V; NCU=${V##*+cuda}
+      fi
+      [ -z "$TK" ] && echo cuda_pkg=$(echo ${NCU:-$D} | tr . -)   # 툴킷: NCCL과 같은 CUDA 버전
+    fi
+  args: {executable: /bin/bash}
+  environment: {DEBIAN_FRONTEND: noninteractive, NEEDRESTART_MODE: l}
+  register: plan_raw
+  changed_when: false
+
+- ansible.builtin.set_fact:
+    plan: >-
+      {%- set d = {} -%}
+      {%- for l in plan_raw.stdout_lines if '=' in l -%}{%- set _ = d.update({l.split('=', 1)[0]: l.split('=', 1)[1]}) -%}{%- endfor -%}
+      {{ d }}
+
+- name: "[2] GPU and driver"
+  ansible.builtin.debug:
+    msg: "GPU {{ plan.gpu }}EA, GPU driver {{ ('OK  installed (' ~ plan.drv ~ ', supports CUDA ' ~ plan.drvcuda ~ ')') if plan.drv else ('skip (no GPU)' if plan.gpu == '0' else 'NG  not installed -> install manually') }}"
+
+- name: "[2] NCCL install notice"
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - " No NCCL library. Installing libnccl2 {{ plan.nccl_pkg }} ..."
+      - "----------------------------------------------------------------"
+  when: plan.nccl_pkg is defined
+
+- name: "[2] Installing NCCL (only where missing)"
+  ansible.builtin.apt:
+    name: ["libnccl2={{ plan.nccl_pkg }}", "libnccl-dev={{ plan.nccl_pkg }}"]
+    allow_change_held_packages: true
+  environment: {DEBIAN_FRONTEND: noninteractive, NEEDRESTART_MODE: l}
+  when: plan.nccl_pkg is defined
+
+- name: "[2] CUDA toolkit install notice"
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - " No CUDA toolkit. Installing cuda-nvcc-{{ plan.cuda_pkg }} / cuda-cudart-dev-{{ plan.cuda_pkg }} (CUDA {{ plan.cuda_pkg | replace('-', '.') }}) ..."
+      - "----------------------------------------------------------------"
+  when: plan.cuda_pkg is defined
+
+- name: "[2] Installing CUDA toolkit (only where missing)"
+  ansible.builtin.apt:
+    name: ["cuda-nvcc-{{ plan.cuda_pkg }}", "cuda-cudart-dev-{{ plan.cuda_pkg }}"]
+  environment: {DEBIAN_FRONTEND: noninteractive, NEEDRESTART_MODE: l}
+  when: plan.cuda_pkg is defined
+
+- name: "[3] Find CUDA and MPI paths"
+  ansible.builtin.shell: |
+    N=$(command -v nvcc || ls -d /usr/local/cuda*/bin/nvcc 2>/dev/null | sort -V | tail -1)
+    echo "cuda_home=$(dirname $(dirname $N))"
+    echo "mpi_home={{ nccl_mpi_home if nccl_mpi_home else '$(dirname $(mpicc --showme:incdirs | cut -d" " -f1))' }}"
+  args: {executable: /bin/bash}
+  register: paths
+  changed_when: false
+
+- ansible.builtin.set_fact:
+    cuda_home: "{{ paths.stdout_lines | select('match', '^cuda_home=') | first | regex_replace('^cuda_home=', '') }}"
+    mpi_home: "{{ paths.stdout_lines | select('match', '^mpi_home=') | first | regex_replace('^mpi_home=', '') }}"
+
+- name: "[3] Get nccl-tests source"
+  ansible.builtin.git:
+    repo: "{{ nccl_tests_repo }}"
+    dest: "{{ nccl_tests_dir }}"
+    version: "{{ nccl_tests_version }}"
+  register: src
+
+- name: "[3] Check existing nccl-tests build"
+  ansible.builtin.stat:
+    path: "{{ nccl_tests_dir }}/build/all_reduce_perf"
+  register: built
+
+- name: "[3] Build nccl-tests (MPI=1, takes a while)"
+  ansible.builtin.shell: >-
+    make -j$(nproc) MPI=1 MPI_HOME={{ mpi_home }} CUDA_HOME={{ cuda_home }} NCCL_HOME=/usr
+    {% if nccl_tests_gencode %}NVCC_GENCODE="{{ nccl_tests_gencode }}"{% endif %}
+  args:
+    chdir: "{{ nccl_tests_dir }}"
+    executable: /bin/bash
+  when: src.changed or not built.stat.exists
+
+- name: "[4] /etc/nccl.conf"
+  ansible.builtin.template:
+    src: nccl.conf.j2
+    dest: /etc/nccl.conf
+    mode: "0644"
+
+- name: Summary
+  ansible.builtin.shell: |
+    st(){ printf '%-28s %s\n' "$1" "$2"; }
+    ver_le(){ [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ]; }
+    N=$(command -v nvcc || ls -d /usr/local/cuda*/bin/nvcc 2>/dev/null | sort -V | tail -1)
+    TK=$([ -n "$N" ] && $N --version | grep -oE 'release [0-9.]+' | awk '{print $2}')
+    NC=$(ls /usr/lib/*/libnccl.so.2.* /usr/local/lib/libnccl.so.2.* 2>/dev/null | head -1 | sed 's/.*libnccl.so.//')
+    NCU=$(dpkg-query -W -f='${Version}' libnccl2 2>/dev/null | grep -oE 'cuda[0-9.]+' | sed 's/cuda//')
+    D="{{ plan.drvcuda }}"
+    st "GPU" "{{ plan.gpu }}EA"
+    {% if plan.drv %}st "GPU driver" "OK  installed ({{ plan.drv }}, supports CUDA {{ plan.drvcuda }})"
+    {% elif plan.gpu == '0' %}st "GPU driver" "skip (no GPU)"
+    {% else %}st "GPU driver" "NG  not installed -> install manually"{% endif %}
+
+    [ -n "$TK" ] && st "CUDA toolkit (nvcc)" "OK  {{ 'installed now' if plan.cuda_pkg is defined else 'already installed' }} ($TK)" || st "CUDA toolkit (nvcc)" "NG  not installed"
+    [ -n "$NC" ] && st "NCCL library" "OK  {{ 'installed now' if plan.nccl_pkg is defined else 'already installed' }} ($NC${NCU:+, built for CUDA $NCU})" || st "NCCL library" "NG  not installed"
+    NEED=$TK; [ -n "$NCU" ] && ! ver_le "$NCU" "$NEED" && NEED=$NCU
+    if [ -n "$D" ] && [ -n "$NEED" ]; then
+      ver_le "$NEED" "$D" && st "driver CUDA vs toolkit/NCCL" "OK  ($D >= $NEED)" || st "driver CUDA vs toolkit/NCCL" "NG  MISMATCH (driver $D < $NEED)"
+    fi
+    v=$(mpirun --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    [ -n "$v" ] && st "MPI (mpirun)" "OK  installed ($v)" || st "MPI (mpirun)" "NG  not installed"
+    n=$(ls {{ nccl_tests_dir }}/build/*_perf 2>/dev/null | wc -l)
+    [ "$n" -gt 0 ] && st "nccl-tests" "OK  built ($n tests: $(ls {{ nccl_tests_dir }}/build/*_perf | xargs -n1 basename | sed 's/_perf//' | tr '\n' ' '))" \
+                   || st "nccl-tests" "NG  not built"
+    st "/etc/nccl.conf" "$(grep -v '^#' /etc/nccl.conf | tr '\n' ' ')"
+  args: {executable: /bin/bash}
+  register: chk
+  changed_when: false
+
+- ansible.builtin.debug:
+    msg: "{{ chk.stdout_lines + ['CUDA_HOME=' ~ cuda_home, 'MPI_HOME=' ~ mpi_home] }}"

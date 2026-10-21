@@ -1,0 +1,3 @@
+---
+- name: rxe-setup restart
+  ansible.builtin.systemd: {name: rxe-setup, state: restarted, daemon_reload: true}

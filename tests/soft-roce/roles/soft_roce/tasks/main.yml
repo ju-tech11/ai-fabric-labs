@@ -1,0 +1,56 @@
+# 용도: Soft-RoCE 설치. ① 패키지 → ② rdma_rxe 커널 모듈 → ③ rail NIC마다 rxe 장치 (재부팅 후에도 자동 생성)
+---
+- name: "[1] Install RDMA packages"
+  ansible.builtin.apt:
+    name: "{{ soft_roce_packages }}"
+    update_cache: true
+    cache_valid_time: 3600
+  environment: {DEBIAN_FRONTEND: noninteractive, NEEDRESTART_MODE: l}
+
+- name: "[2] Check rdma_rxe kernel module"
+  ansible.builtin.command: modinfo rdma_rxe
+  register: rxe_mod
+  changed_when: false
+  failed_when: false
+
+- name: "[2] Install linux-modules-extra if rdma_rxe is missing"
+  ansible.builtin.shell: apt-get install -y linux-modules-extra-$(uname -r)
+  environment: {DEBIAN_FRONTEND: noninteractive, NEEDRESTART_MODE: l}
+  when: rxe_mod.rc != 0
+
+- name: "[2] Load rdma_rxe at boot"
+  ansible.builtin.copy:
+    content: "rdma_rxe\n"
+    dest: /etc/modules-load.d/rdma_rxe.conf
+    mode: "0644"
+
+- name: "[3] rxe device script (/usr/local/sbin/rxe-setup.sh)"
+  ansible.builtin.template:
+    src: rxe-setup.sh.j2
+    dest: /usr/local/sbin/rxe-setup.sh
+    mode: "0755"
+  notify: rxe-setup restart
+
+- name: "[3] Run the script at boot (systemd rxe-setup)"
+  ansible.builtin.template:
+    src: rxe-setup.service.j2
+    dest: /etc/systemd/system/rxe-setup.service
+    mode: "0644"
+  notify: rxe-setup restart
+
+- name: "[3] Enable and start rxe-setup"
+  ansible.builtin.systemd:
+    name: rxe-setup
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- ansible.builtin.meta: flush_handlers
+
+- name: Check (rdma link)
+  ansible.builtin.command: rdma link show
+  register: rdma_links
+  changed_when: false
+
+- ansible.builtin.debug:
+    msg: "{{ rdma_links.stdout_lines }}"

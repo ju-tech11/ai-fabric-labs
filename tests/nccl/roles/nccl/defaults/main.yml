@@ -1,0 +1,32 @@
+---
+# 용도: NCCL·nccl-tests 설치 기본값
+#   이미 있으면(DGX OS 등) 설치를 건너뛰고 nccl-tests 빌드만 함
+
+# ① 빌드 도구·MPI (Ubuntu 패키지)
+nccl_base_packages:
+  - build-essential    # make, gcc, g++
+  - git
+  - wget
+  - openmpi-bin        # mpirun (여러 서버에서 동시에 실행)
+  - libopenmpi-dev     # mpi.h, libmpi (nccl-tests MPI=1 빌드용)
+
+# ② NVIDIA CUDA 저장소에서 받는 것 (없을 때만)
+#   libnccl2 / libnccl-dev : NCCL 라이브러리·헤더 (/usr/lib/x86_64-linux-gnu, /usr/include)
+#   cuda-nvcc-X-Y / cuda-cudart-dev-X-Y : 컴파일러·런타임 (NCCL이 빌드된 CUDA 버전과 자동으로 맞춤, /usr/local/cuda-X.Y)
+nccl_version: ""            # 비우면 저장소 최신. 고정 예) "2.27.7-1+cuda12.9"  (apt-cache madison libnccl2 로 목록 확인)
+cuda_keyring_version: "1.1-1"
+
+# ③ nccl-tests
+nccl_tests_repo: https://github.com/NVIDIA/nccl-tests.git
+nccl_tests_version: master
+nccl_tests_dir: /opt/nccl-tests
+nccl_mpi_home: ""           # 비우면 mpicc로 자동 확인. HPC-X 등 쓰면 경로 지정
+# 빌드할 GPU 아키텍처. 비우면 전체(느림). Air는 GPU가 없으니 1개만 빌드해서 시간 단축
+nccl_tests_gencode: "{{ '-gencode=arch=compute_90,code=sm_90' if rdma_mode | default('soft') == 'soft' else '' }}"
+
+# ④ /etc/nccl.conf (NCCL이 자동으로 읽음, 환경변수가 있으면 환경변수 우선)
+#   RoCE(rdma_link: ethernet)일 때만 GID·TC를 씀. InfiniBand는 필요 없음
+nccl_ib_gid_index: "{{ 1 if rdma_mode | default('soft') == 'soft' else 3 }}"   # RoCEv2 IPv4 GID (rxe=1, ConnectX 보통 3 → show_gids로 확인)
+nccl_ib_tc: 106                 # DSCP 26(=104) + ECN(2), 스위치 qos roce 기본값과 맞춤
+nccl_socket_ifname: eth0        # 부트스트랩(초기 연결)용 관리 NIC (실장비 이름으로)
+nccl_debug: WARN

@@ -1,0 +1,9 @@
+#!/bin/bash
+# 용도: {{ inventory_hostname }} rail NIC마다 Soft-RoCE 장치 생성 (Ansible 생성, 직접 수정 금지)
+#   이미 있으면 건너뜀 → 여러 번 실행해도 안전
+modprobe rdma_rxe
+{% for l in fabric_links_all | selectattr('server', 'equalto', inventory_hostname) | sort(attribute='server_iface_index') %}
+{% set dev = rdma_dev_map.get(l.plane ~ '-' ~ l.rail, 'rxe_' ~ l.plane ~ l.rail) %}
+rdma link show | grep -qw "netdev {{ l.server_iface }}" || rdma link add {{ dev }} type rxe netdev {{ l.server_iface }}   # plane-{{ l.plane }} rail{{ l.rail }}
+{% endfor %}
+exit 0
