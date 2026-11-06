@@ -1,0 +1,472 @@
+{
+    "format": "JSON",
+    "title": "oob-simx",
+    "ztp": "",
+    "content": {
+        "nodes": {
+            "OOB-Spine1": {
+                "cpu": 2,
+                "memory": 4096,
+                "storage": 20,
+                "positioning": {
+                    "x": 1100,
+                    "y": 0
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "custom",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "cumulus-vx-5.16.1",
+                "labels": {
+                    "role": "spine"
+                },
+                "management_mac": "44:38:39:23:01:65",
+                "management_ip": "192.168.1.101",
+                "oob": false,
+                "storage_pci": {},
+                "pxehost": false,
+                "features": {
+                    "uefi": false
+                }
+            },
+            "OOB-Spine2": {
+                "cpu": 2,
+                "memory": 4096,
+                "storage": 20,
+                "positioning": {
+                    "x": 2200,
+                    "y": 0
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "custom",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "cumulus-vx-5.16.1",
+                "labels": {
+                    "role": "spine"
+                },
+                "management_mac": "44:38:39:23:01:66",
+                "management_ip": "192.168.1.102",
+                "oob": false,
+                "storage_pci": {},
+                "pxehost": false,
+                "features": {
+                    "uefi": false
+                }
+            },
+            "OOB-Leaf1": {
+                "cpu": 2,
+                "memory": 4096,
+                "storage": 20,
+                "positioning": {
+                    "x": 825,
+                    "y": 400
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "custom",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "cumulus-vx-5.16.1",
+                "labels": {
+                    "role": "leaf"
+                },
+                "management_mac": "44:38:39:23:01:01",
+                "management_ip": "192.168.1.1",
+                "oob": false,
+                "storage_pci": {},
+                "pxehost": false,
+                "features": {
+                    "uefi": false
+                }
+            },
+            "OOB-Leaf2": {
+                "cpu": 2,
+                "memory": 4096,
+                "storage": 20,
+                "positioning": {
+                    "x": 1925,
+                    "y": 400
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "custom",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "cumulus-vx-5.16.1",
+                "labels": {
+                    "role": "leaf"
+                },
+                "management_mac": "44:38:39:23:01:02",
+                "management_ip": "192.168.1.2",
+                "oob": false,
+                "storage_pci": {},
+                "pxehost": false,
+                "features": {
+                    "uefi": false
+                }
+            },
+            "host-01": {
+                "emulation_type": "HOST",
+                "cpu": 4,
+                "memory": 8192,
+                "storage": 20,
+                "positioning": {
+                    "x": 825,
+                    "y": 800
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "custom",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "role": "server"
+                },
+                "simulator_image": "simx-nic-26.7-1104_x86_64",
+                "network_pci": {
+                    "nic1": {
+                        "emulation_type": "NIC_ETHERNET",
+                        "model": "connectx7",
+                        "number_of_ports": 2,
+                        "port_type": "ethernet",
+                        "simulator_image": "simx-nic-26.7-1104_x86_64"
+                    },
+                    "dpu1": {
+                        "emulation_type": "DPU_ETHERNET",
+                        "model": "bluefield3",
+                        "number_of_ports": 2,
+                        "port_type": "ethernet",
+                        "nic_model": "virtio",
+                        "os": "bf-bundle-3.4.0-50_26.04_ubuntu-22.04_prod.img",
+                        "cpu": 4,
+                        "memory": 8192,
+                        "storage": 20,
+                        "cpu_arch": "x86",
+                        "simulator_image": "simx-nic-26.7-1104_x86_64"
+                    }
+                },
+                "management_mac": "44:38:39:12:01:01",
+                "management_ip": "192.168.11.1",
+                "oob": false,
+                "storage_pci": {},
+                "pxehost": false,
+                "features": {
+                    "uefi": false
+                }
+            },
+            "host-02": {
+                "emulation_type": "HOST",
+                "cpu": 4,
+                "memory": 8192,
+                "storage": 20,
+                "positioning": {
+                    "x": 1925,
+                    "y": 800
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "custom",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "role": "server"
+                },
+                "simulator_image": "simx-nic-26.7-1104_x86_64",
+                "network_pci": {
+                    "nic1": {
+                        "emulation_type": "NIC_ETHERNET",
+                        "model": "connectx7",
+                        "number_of_ports": 2,
+                        "port_type": "ethernet",
+                        "simulator_image": "simx-nic-26.7-1104_x86_64"
+                    },
+                    "dpu1": {
+                        "emulation_type": "DPU_ETHERNET",
+                        "model": "bluefield3",
+                        "number_of_ports": 2,
+                        "port_type": "ethernet",
+                        "nic_model": "virtio",
+                        "os": "bf-bundle-3.4.0-50_26.04_ubuntu-22.04_prod.img",
+                        "cpu": 4,
+                        "memory": 8192,
+                        "storage": 20,
+                        "cpu_arch": "x86",
+                        "simulator_image": "simx-nic-26.7-1104_x86_64"
+                    }
+                },
+                "management_mac": "44:38:39:12:01:02",
+                "management_ip": "192.168.11.2",
+                "oob": false,
+                "storage_pci": {},
+                "pxehost": false,
+                "features": {
+                    "uefi": false
+                }
+            }
+        },
+        "links": [
+            [
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp49"
+                },
+                {
+                    "node": "OOB-Spine1",
+                    "interface": "swp1"
+                }
+            ],
+            [
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp50"
+                },
+                {
+                    "node": "OOB-Spine2",
+                    "interface": "swp1"
+                }
+            ],
+            [
+                {
+                    "node": "OOB-Leaf2",
+                    "interface": "swp49"
+                },
+                {
+                    "node": "OOB-Spine1",
+                    "interface": "swp2"
+                }
+            ],
+            [
+                {
+                    "node": "OOB-Leaf2",
+                    "interface": "swp50"
+                },
+                {
+                    "node": "OOB-Spine2",
+                    "interface": "swp2"
+                }
+            ],
+            [
+                {
+                    "node": "host-01",
+                    "interface": "eth1"
+                },
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp1"
+                }
+            ],
+            [
+                {
+                    "node": "host-01",
+                    "interface": "eth2"
+                },
+                {
+                    "node": "OOB-Leaf2",
+                    "interface": "swp6"
+                }
+            ],
+            [
+                {
+                    "node": "host-01",
+                    "network_pci": "dpu1",
+                    "interface": "oob_net0"
+                },
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp11"
+                }
+            ],
+            [
+                {
+                    "node": "host-01",
+                    "network_pci": "dpu1",
+                    "interface": "p0"
+                },
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp21"
+                }
+            ],
+            [
+                {
+                    "node": "host-01",
+                    "network_pci": "dpu1",
+                    "interface": "p1"
+                },
+                {
+                    "node": "OOB-Leaf2",
+                    "interface": "swp31"
+                }
+            ],
+            [
+                {
+                    "node": "host-01",
+                    "network_pci": "nic1",
+                    "interface": "p0"
+                },
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp41"
+                }
+            ],
+            [
+                {
+                    "node": "host-01",
+                    "network_pci": "nic1",
+                    "interface": "p1"
+                },
+                {
+                    "node": "OOB-Leaf2",
+                    "interface": "swp45"
+                }
+            ],
+            [
+                {
+                    "node": "host-02",
+                    "interface": "eth1"
+                },
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp2"
+                }
+            ],
+            [
+                {
+                    "node": "host-02",
+                    "interface": "eth2"
+                },
+                {
+                    "node": "OOB-Leaf2",
+                    "interface": "swp7"
+                }
+            ],
+            [
+                {
+                    "node": "host-02",
+                    "network_pci": "dpu1",
+                    "interface": "oob_net0"
+                },
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp12"
+                }
+            ],
+            [
+                {
+                    "node": "host-02",
+                    "network_pci": "dpu1",
+                    "interface": "p0"
+                },
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp22"
+                }
+            ],
+            [
+                {
+                    "node": "host-02",
+                    "network_pci": "dpu1",
+                    "interface": "p1"
+                },
+                {
+                    "node": "OOB-Leaf2",
+                    "interface": "swp32"
+                }
+            ],
+            [
+                {
+                    "node": "host-02",
+                    "network_pci": "nic1",
+                    "interface": "p0"
+                },
+                {
+                    "node": "OOB-Leaf1",
+                    "interface": "swp42"
+                }
+            ],
+            [
+                {
+                    "node": "host-02",
+                    "network_pci": "nic1",
+                    "interface": "p1"
+                },
+                {
+                    "node": "OOB-Leaf2",
+                    "interface": "swp46"
+                }
+            ]
+        ],
+        "oob": {
+            "nodes": {
+                "oob-mgmt-server": {
+                    "cpu": 2,
+                    "memory": 2048,
+                    "storage": 20,
+                    "positioning": {
+                        "x": 1375,
+                        "y": -275
+                    }
+                },
+                "oob-mgmt-switch": {
+                    "cpu": 5,
+                    "memory": 5120,
+                    "storage": 20,
+                    "positioning": {
+                        "x": 1925,
+                        "y": -275
+                    }
+                }
+            },
+            "enable_dhcp": true
+        },
+        "instructions": [
+            {
+                "node": "OOB-Spine1",
+                "executor": "init",
+                "name": "hostname",
+                "data": {
+                    "hostname": "OOB-Spine1"
+                }
+            },
+            {
+                "node": "OOB-Spine2",
+                "executor": "init",
+                "name": "hostname",
+                "data": {
+                    "hostname": "OOB-Spine2"
+                }
+            },
+            {
+                "node": "OOB-Leaf1",
+                "executor": "init",
+                "name": "hostname",
+                "data": {
+                    "hostname": "OOB-Leaf1"
+                }
+            },
+            {
+                "node": "OOB-Leaf2",
+                "executor": "init",
+                "name": "hostname",
+                "data": {
+                    "hostname": "OOB-Leaf2"
+                }
+            },
+            {
+                "node": "host-01",
+                "executor": "init",
+                "name": "hostname",
+                "data": {
+                    "hostname": "host-01"
+                }
+            },
+            {
+                "node": "host-02",
+                "executor": "init",
+                "name": "hostname",
+                "data": {
+                    "hostname": "host-02"
+                }
+            }
+        ]
+    }
+}

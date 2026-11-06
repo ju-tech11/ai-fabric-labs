@@ -1,0 +1,98 @@
+{
+    "format": "JSON",
+    "title": "oob-simx-t1-split",
+    "ztp": "",
+    "content": {
+        "nodes": {
+            "host-01": {
+                "emulation_type": "HOST",
+                "cpu": 4,
+                "memory": 8192,
+                "storage": 20,
+                "nic_model": "virtio",
+                "os": "generic/ubuntu2204",
+                "simulator_image": "simx-nic-26.7-1104_x86_64",
+                "network_pci": {
+                    "nic1": {
+                        "emulation_type": "NIC_ETHERNET",
+                        "model": "connectx7",
+                        "number_of_ports": 2,
+                        "port_type": "ethernet",
+                        "simulator_image": "simx-nic-26.7-1104_x86_64"
+                    },
+                    "dpu1": {
+                        "emulation_type": "DPU_ETHERNET",
+                        "model": "bluefield3",
+                        "number_of_ports": 2,
+                        "port_type": "ethernet",
+                        "nic_model": "virtio",
+                        "os": "bf-bundle-3.4.0-50_26.04_ubuntu-22.04_prod.img",
+                        "cpu": 4,
+                        "memory": 8192,
+                        "storage": 20,
+                        "cpu_arch": "x86",
+                        "simulator_image": "simx-nic-26.7-1104_x86_64"
+                    }
+                }
+            },
+            "host-02": {
+                "emulation_type": "HOST",
+                "cpu": 4,
+                "memory": 8192,
+                "storage": 20,
+                "nic_model": "virtio",
+                "os": "generic/ubuntu2204",
+                "simulator_image": "simx-nic-26.7-1104_x86_64",
+                "network_pci": {
+                    "nic1": {
+                        "emulation_type": "NIC_ETHERNET",
+                        "model": "connectx7",
+                        "number_of_ports": 2,
+                        "port_type": "ethernet",
+                        "simulator_image": "simx-nic-26.7-1104_x86_64"
+                    },
+                    "dpu1": {
+                        "emulation_type": "DPU_ETHERNET",
+                        "model": "bluefield3",
+                        "number_of_ports": 2,
+                        "port_type": "ethernet",
+                        "nic_model": "virtio",
+                        "os": "bf-bundle-3.4.0-50_26.04_ubuntu-22.04_prod.img",
+                        "cpu": 4,
+                        "memory": 8192,
+                        "storage": 20,
+                        "cpu_arch": "x86",
+                        "simulator_image": "simx-nic-26.7-1104_x86_64"
+                    }
+                }
+            }
+        },
+        "links": [
+            [
+                {
+                    "node": "host-01",
+                    "network_pci": "dpu1",
+                    "interface": "p0"
+                },
+                {
+                    "node": "host-02",
+                    "network_pci": "dpu1",
+                    "interface": "p0"
+                }
+            ],
+            [
+                {
+                    "node": "host-01",
+                    "network_pci": "nic1",
+                    "interface": "p0"
+                },
+                {
+                    "node": "host-02",
+                    "network_pci": "nic1",
+                    "interface": "p0"
+                }
+            ]
+        ],
+        "oob": false
+    }
+}
